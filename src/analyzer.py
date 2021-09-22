@@ -44,7 +44,7 @@ def get_table():
     
 
 
-def count_trigrams(keys: JSON, data: JSON):
+def count_trigrams(keys: JSON, data: JSON, thumb: str):
     table = get_table()
 
     trigram_data = {
@@ -59,9 +59,9 @@ def count_trigrams(keys: JSON, data: JSON):
         fingers = []
         for char in trigram:
             if char == ' ':
-                fingers.append("LT")
+                fingers.append(thumb)
             else:
-                fingers.append(keys['keys'][char.lower()]['finger'])
+                fingers.append(keys['keys'][char]['finger'])
 
         key = '-'.join(fingers)
         if key in table:
@@ -70,11 +70,4 @@ def count_trigrams(keys: JSON, data: JSON):
     for stat in trigram_data:
         trigram_data[stat] /= sum(data['3-grams'].values())
 
-    print(trigram_data)
-
-
-import layout
-import json
-keys = layout.create("ylrdwjmou,csntgphaeixzqvkbf'/.")
-data = json.load(open('data/200-data.json', 'r'))
-count_trigrams(keys, data)
+    return trigram_data
