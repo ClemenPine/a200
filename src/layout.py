@@ -3,6 +3,9 @@ import random
 import glob
 from typing import Dict
 
+JSON = Dict[str, any]
+
+
 def load_file(filename: str):
     
     fingers = ['LP', 'LR', 'LM', 'LI', 'RI', 'RM', 'RR', 'RP']
@@ -18,37 +21,55 @@ def load_file(filename: str):
     }
 
     with open(filename, 'r') as f:
-        tokens = [word for word in f.read().split()]
-
-    keys['name'] = tokens.pop(0)
+        tokens = []
+        for i, line in enumerate(f.readlines()):
+            if i == 0:
+                keys['name'] = ' '.join(line.split())
+            else:
+                tokens.append(line.split())
 
     chars = tokens[:len(tokens) // 2]
     indexes = tokens[len(tokens) // 2:]
 
-    keymap = dict(zip(chars, indexes))
-    for item in keymap:
-        finger = fingers[int(keymap[item])]
-        if len(item) == 2:
-            keys['keys'][item[0]] = {
+    rows = []
+
+    for i in range(len(tokens) // 2):
+        rows.append(list(zip(chars[i], indexes[i])))
+
+    for i, keymap in enumerate(rows):
+        for j, item in enumerate(keymap):
+            finger = fingers[int(item[1])]
+
+            primary = ''
+            shift = ''
+
+            if len(item[0]) == 2:
+                primary = item[0][0]
+                shift = item[0][1]
+            else:
+                primary = item[0]
+                if item[0] in shifted:
+                    shift = shifted[item[0]]
+                else:
+                    shift = None
+
+            keys['keys'][primary] = {
                 'finger': finger,
-                'shift': False
+                'row': i,
+                'col': j,
+                'shift': False,
             }
-            keys['keys'][item[1]] = {
-                'finger': finger,
-                'shift': True
-            }
-        else:
-            keys['keys'][item] = {
-                'finger': finger,
-                'shift': False
-            }
-            if item in shifted:
-                keys['keys'][shifted[item]] = {
+
+            if shift:
+                keys['keys'][shift] = {
                     'finger': finger,
-                    'shift': True
-                }
+                    'row': i,
+                    'col': j,
+                    'shift': True,
+                }   
 
     return keys
+
 
 def load_dir(dirname: str):
     layouts = []
@@ -56,3 +77,7 @@ def load_dir(dirname: str):
         layouts.append(load_file(filename))
 
     return layouts
+
+
+def pretty_print(keys: JSON):
+    pass
