@@ -26,7 +26,7 @@ def init_config():
             "sfR": False
         }
     }
-    
+
     return config
 
 
@@ -178,6 +178,48 @@ if __name__ == "__main__":
                 exit()
 
             config['datafile'] = sys.argv[2]
+
+        elif sys.argv[1] in ['help', 'hp', 'h', '?']:
+            print("Usage:", sys.argv[0], "[command]", "[arg]", "\n") 
+            print(
+                "   ",
+                "sort (st)".rjust(12, ' '), 
+                "[column] {high/low}".rjust(22, ' '), 
+                "order the list of layouts based on a column".rjust(45, ' '),
+                "\n"
+            )
+            print(
+                "   ",
+                "toggle (tg)".rjust(12, ' '),
+                "[column]".rjust(22, ' '), 
+                "turn on/off the visibility of a column".rjust(45, ' '),
+                "\n"
+            )
+            print(
+                "   ",
+                "data (dt)".rjust(12, ' '), 
+                "[path/to/file]".rjust(22, ' '), 
+                "set the data to use for the analysis".rjust(45, ' '),
+                "\n"
+            )
+            print(
+                "   ",
+                "thumb (tb)".rjust(12, ' '), 
+                "[LT/RT]".rjust(22, ' '),
+                "change which thumb is used for space".rjust(45, ' '),
+                "\n"
+            )
+
+            exit()
+
+        else:
+            print(
+                "[" + sys.argv[1] + 
+                "] is not a valid command, type ./" + 
+                sys.argv[0] + 
+                " help for a list of commands"
+            )
+            exit()
 
     results = get_results(config)
     show_results(results, config)
