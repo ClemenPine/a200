@@ -37,6 +37,11 @@ def get_table():
 
         if sequence[0] == sequence[1] or sequence[1] == sequence[2]:
             trigram_type = "sfb"
+        if sequence[0] == sequence[2]:
+            if sequence[0] == sequence[1]:
+                trigram_type = 'sfT'
+            else:
+                trigram_type = 'dsfb'
 
         table['-'.join(sequence)] = trigram_type
     
@@ -53,6 +58,9 @@ def count_trigrams(keys: JSON, data: JSON, thumb: str):
         'redirect': 0,
         'onehand': 0,
         'sfb': 0,
+        'dsfb': 0,
+        'sfT': 0,
+        'sfR': 0,
     }
 
     for trigram in data['3-grams']:
@@ -65,7 +73,14 @@ def count_trigrams(keys: JSON, data: JSON, thumb: str):
 
         key = '-'.join(fingers)
         if key in table:
-            trigram_data[table[key]] += data['3-grams'][trigram]
+            if (
+                trigram[0] == trigram[1] or
+                trigram[1] == trigram[2] or
+                trigram[0] == trigram[2]
+            ):
+                trigram_data['sfR'] += data['3-grams'][trigram]
+            else:
+                trigram_data[table[key]] += data['3-grams'][trigram]
 
     for stat in trigram_data:
         trigram_data[stat] /= sum(data['3-grams'].values())
