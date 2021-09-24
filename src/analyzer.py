@@ -48,6 +48,31 @@ def get_table():
     return dict(sorted(table.items(), key=lambda x:x[1], reverse=True))
     
 
+def count_finger_use(keys: JSON, data: JSON, thumb: str):
+
+    counts = {
+        'LP': 0,
+        'LR': 0,
+        'LM': 0,
+        'LI': 0,
+        'RI': 0,
+        'RM': 0,
+        'RR': 0,
+        'RP': 0,
+        thumb: 0,
+    }
+
+    for char in data['1-grams']:
+        if char == ' ':
+            counts[thumb] = data['1-grams'][char]
+        else:
+            counts[keys['keys'][char]['finger']] += data['1-grams'][char]
+
+    for finger in counts:
+        counts[finger] /= sum(data['1-grams'].values())
+
+    return counts  
+
 
 def count_trigrams(keys: JSON, data: JSON, thumb: str):
     table = get_table()
@@ -90,3 +115,11 @@ def count_trigrams(keys: JSON, data: JSON, thumb: str):
         trigram_data[stat] /= sum(data['3-grams'].values())
 
     return trigram_data
+
+
+import json
+import layout
+keys = layout.load_file('layouts/2.qwerty')
+data = json.load(open('data/quotes-data.json', 'r'))
+
+count_finger_use(keys, data, "LT")

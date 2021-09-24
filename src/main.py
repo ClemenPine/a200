@@ -27,6 +27,17 @@ def init_config():
             "sfT": False,
             "sfR": False
         },
+        "finger-use": {
+            "LP": False,
+            "LR": False,
+            "LM": False,
+            "LI": False,
+            "RI": False,
+            "RM": False,
+            "RR": False,
+            "RP": False,
+            "LT": False,
+        },
         "layouts": {}
     }
 
@@ -37,16 +48,16 @@ def init_config():
     return config
 
 
-def get_color(item: JSON, dtype: str, data: List):
+def get_color(item: JSON, ctype: str, dtype: str, data: List):
     percent = 0
     for result in data:
-        if item['data'][dtype] > result['data'][dtype]:
+        if item[ctype][dtype] > result[ctype][dtype]:
             percent += 1
     percent /= len(data)
 
     colors = json.load(open(config['themedir'] + "/" + config['theme'] + ".json"))['colors']
 
-    string = "{:.2%}".format(item['data'][dtype]).rjust(6, ' ') + '  '
+    string = "{:.2%}".format(item[ctype][dtype]).rjust(6, ' ') + '  '
     if percent > .9:
         return '\033[38;5;' + colors['highest'] + 'm' + string + '\033[0m'
     elif percent > .7:
@@ -66,16 +77,17 @@ def get_results(config: JSON):
 
     results = {
         'file': data['file'],
-        'sort': 'name',
-        'data': []
+        'data': [],
     }
 
     for keys in layouts:
-        counts = analyzer.count_trigrams(keys, data, config['thumb-space'])
+        trigram_counts = analyzer.count_trigrams(keys, data, config['thumb-space'])
+        finger_use = analyzer.count_finger_use(keys, data, config['thumb-space'])
         results['data'].append(
             {
                 'name': keys['name'],
-                'data': counts,
+                'data': trigram_counts,
+                'finger-use': finger_use,
             }
         )
 
@@ -86,10 +98,14 @@ def get_results(config: JSON):
 def sort_results(results: List[dict], config: JSON):
 
     results['sort'] = config['sort']
-    if (config['sort'] == 'name'):
+    if config['sort'] == 'name':
         results['data'] = sorted(results['data'], key=lambda x : x['name'].lower(), reverse=config['sort-high'])
-    else:
+    elif config['sort'] in config['columns']:
         results['data'] = sorted(results['data'], key=lambda x : x['data'][config['sort']], reverse=config['sort-high'])
+    elif config['sort'] in config['finger-use']:
+        results['data'] = sorted(results['data'], key=lambda x : x['finger-use'][config['sort']], reverse=config['sort-high'])
+    else:
+        raise("invalid sort parameter")
 
     return results
 
@@ -103,6 +119,9 @@ def show_results(results: List[dict], config: JSON):
     for trigram_type in config['columns']:
         if config['columns'][trigram_type]:
             print(trigram_type.rjust(8, ' '), end=' ')
+    for finger_type in config['finger-use']:
+        if config['finger-use'][finger_type]:
+            print(finger_type.rjust(8, ' '), end=' ')
     print()
 
     for item in results['data']:
@@ -112,7 +131,10 @@ def show_results(results: List[dict], config: JSON):
         print((item['name'] + '\033[38;5;250m' + ' ').ljust(36, '-') + '\033[0m', end=' ')
         for trigram_type in config['columns']:
             if config['columns'][trigram_type]:
-                print(get_color(item, trigram_type, results['data']), end=' ')
+                print(get_color(item, 'data', trigram_type, results['data']), end=' ')
+        for finger_type in config['finger-use']:
+            if config['finger-use'][finger_type]:
+                print(get_color(item, 'finger-use', finger_type, results['data']), end=' ')
         print()
 
 
@@ -140,15 +162,22 @@ if __name__ == "__main__":
 
             if sys.argv[2] in ['column', 'c']:
                 if sys.argv[3] in ['all', 'a']:
-                    if True in config['columns'].values():
+                    if (
+                        True in config['columns'].values() or
+                        True in config['finger-use'].values()
+                    ):
                         new_state = False
                     else:
                         new_state = True
 
                     for column in config['columns']:
                         config['columns'][column] = new_state
+                    for column in config['finger-use']:
+                        config['finger-use'][column] = new_state
                 elif sys.argv[3] in config['columns']:
                     config['columns'][sys.argv[3]] = not config['columns'][sys.argv[3]]
+                elif sys.argv[3] in config['finger-use']:
+                    config['finger-use'][sys.argv[3]] = not config['finger-use'][sys.argv[3]]
                 else:
                     print("[" + sys.argv[3] + "] is not a valid column name")
                     exit()
@@ -177,6 +206,7 @@ if __name__ == "__main__":
 
             if not (
                 sys.argv[2] in config['columns'] or 
+                sys.argv[2] in config['finger-use'] or
                 sys.argv[2] == 'name' or
                 sys.argv[2] in ['high', 'low']
             ):
