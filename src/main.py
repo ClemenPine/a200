@@ -11,6 +11,8 @@ JSON = Dict[str, any]
 def init_config():
     config = {
         "layoutdir": "layouts",
+        "themedir": "themes",
+        "theme": "festive",
         "datafile": "data/200-data.json",
         "thumb-space": "LT",
         "sort": "name",
@@ -42,18 +44,20 @@ def get_color(item: JSON, dtype: str, data: List):
             percent += 1
     percent /= len(data)
 
+    colors = json.load(open(config['themedir'] + "/" + config['theme'] + ".json"))['colors']
+
     string = "{:.2%}".format(item['data'][dtype]).rjust(6, ' ') + '  '
     if percent > .9:
-        return '\033[38;5;46m' + string + '\033[0m' # bright green
+        return '\033[38;5;' + colors['highest'] + 'm' + string + '\033[0m'
     elif percent > .7:
-        return '\033[38;5;2m' + string + '\033[0m' # green
+        return '\033[38;5;' + colors['high'] + 'm' + string + '\033[0m'
 
     elif percent < .1:
-        return '\033[38;5;9m' + string + '\033[0m' # bright red
+        return '\033[38;5;' + colors['lowest'] + 'm' + string + '\033[0m'
     elif percent < .3:
-        return '\033[38;5;124m' + string + '\033[0m' # red
+        return '\033[38;5;' + colors['low'] + 'm' + string + '\033[0m'
     else:
-        return '\033[38;5;250m' + string + '\033[0m'
+        return '\033[38;5;' + colors['base'] + 'm' + string + '\033[0m'
 
 
 def get_results(config: JSON):

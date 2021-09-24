@@ -1,0 +1,10 @@
+{
+    "name": "festive",
+    "colors": {
+        "base": "250",
+        "highest": "46",
+        "high": "2",
+        "low": "124",
+        "lowest": "9"
+    }
+}
