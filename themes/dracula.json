@@ -1,0 +1,10 @@
+{
+    "name": "dracula",
+    "colors": {
+        "base": "250",
+        "highest": "196",
+        "high": "124",
+        "low": "243",
+        "lowest": "240"
+    }
+}

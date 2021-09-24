@@ -1,0 +1,10 @@
+{
+    "name": "synthwave",
+    "colors": {
+        "base": "250",
+        "highest": "135",
+        "high": "127",
+        "low": "124",
+        "lowest": "196"
+    }
+}

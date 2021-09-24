@@ -1,0 +1,10 @@
+{
+    "name": "bumblebee",
+    "colors": {
+        "base": "250",
+        "highest": "220",
+        "high": "208",
+        "low": "124",
+        "lowest": "196"
+    }
+}
