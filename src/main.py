@@ -24,8 +24,13 @@ def init_config():
             "dsfb": True,
             "sfT": False,
             "sfR": False
-        }
+        },
+        "layouts": {}
     }
+
+    layouts = layout.load_dir(config['layoutdir'])
+    for keys in layouts:
+        config['layouts'][keys['name'].lower()] = True
 
     return config
 
@@ -88,6 +93,7 @@ def sort_results(results: List[dict], config: JSON):
 def show_results(results: List[dict], config: JSON):
 
     print(results['file'].upper())
+    print("thumb:", config['thumb-space'])
     print(("sort by " + results['sort'].upper() + ":").ljust(22, ' '), end=' ')
 
     for trigram_type in config['columns']:
@@ -96,6 +102,9 @@ def show_results(results: List[dict], config: JSON):
     print()
 
     for item in results['data']:
+        if not config['layouts'][item['name'].lower()]:
+            continue
+
         print((item['name'] + '\033[38;5;250m' + ' ').ljust(36, '-') + '\033[0m', end=' ')
         for trigram_type in config['columns']:
             if config['columns'][trigram_type]:
@@ -112,17 +121,50 @@ if __name__ == "__main__":
 
     if len(sys.argv) > 1:
 
-        # toggle columns as visible or not
+        # toggle columns/layouts as visible or not
         if sys.argv[1] in ['toggle', 'tg']:
-            if len(sys.argv) != 3:
-                print("usage: ./" + sys.argv[0] + " toggle [column]")
-                exit()
+            if len(sys.argv) != 4:
+                if len(sys.argv) == 3 and sys.argv[2] == 'c':
+                    print("usage: ./" + sys.argv[0] + " toggle c [column]")
+                    exit()
+                elif len(sys.argv) == 3 and sys.argv[2] == 'l':
+                    print("usage: ./" + sys.argv[0] + " toggle l [layout]")
+                    exit()
+                else:
+                    print("usage: ./" + sys.argv[0] + " toggle c/l [column/layout]")
+                    exit()
 
-            if not sys.argv[2] in config['columns']:
-                print("[" + sys.argv[2] + "] is not a valid column name")
-                exit()
+            if sys.argv[2] in ['column', 'c']:
+                if sys.argv[3] in ['all', 'a']:
+                    if True in config['columns'].values():
+                        new_state = False
+                    else:
+                        new_state = True
 
-            config['columns'][sys.argv[2]] = not config['columns'][sys.argv[2]]
+                    for column in config['columns']:
+                        config['columns'][column] = new_state
+                elif sys.argv[3] in config['columns']:
+                    config['columns'][sys.argv[3]] = not config['columns'][sys.argv[3]]
+                else:
+                    print("[" + sys.argv[3] + "] is not a valid column name")
+                    exit()
+            elif sys.argv[2] in ['layout', 'l']:
+                if sys.argv[3] in ['all', 'a']:
+                    if True in config['layouts'].values():
+                        new_state = False
+                    else:
+                        new_state = True
+
+                    for keys in config['layouts']:
+                        config['layouts'][keys] = new_state
+                elif sys.argv[3] in config['layouts']:
+                    config['layouts'][sys.argv[3]] = not config['layouts'][sys.argv[3]]
+                else:
+                    print("[" + sys.argv[3] + "] is not a valid layout name")
+                    exit()
+            else:
+                print("usage: ./" + sys.argv[0] + " toggle c/l [column/layout]")
+                exit()
         
         elif sys.argv[1] in ['sort', 'st']:
             if not 2 < len(sys.argv) < 5:
@@ -159,10 +201,10 @@ if __name__ == "__main__":
         
         elif sys.argv[1] in ['thumb', 'tb']:
             if len(sys.argv) != 3:
-                print("usage: ./" + sys.argv[0] + " thumb [LT/RT]")
+                print("usage: ./" + sys.argv[0] + " thumb [LT/RT/NONE]")
                 exit()
 
-            if not sys.argv[2].upper() in ['LT', 'RT']:
+            if not sys.argv[2].upper() in ['LT', 'RT', 'NONE']:
                 print("[" + sys.argv[2] + "] is not a valid thumb name")
                 exit()
 
@@ -179,34 +221,51 @@ if __name__ == "__main__":
 
             config['datafile'] = sys.argv[2]
 
+        elif sys.argv[1] in ['reset']:
+            config = init_config()
+
         elif sys.argv[1] in ['help', 'hp', 'h', '?']:
             print("Usage:", sys.argv[0], "[command]", "[arg]", "\n") 
             print(
                 "   ",
-                "sort (st)".rjust(12, ' '), 
+                "sort (st)".rjust(15, ' '), 
                 "[column] {high/low}".rjust(22, ' '), 
                 "order the list of layouts based on a column".rjust(45, ' '),
                 "\n"
             )
             print(
                 "   ",
-                "toggle (tg)".rjust(12, ' '),
-                "[column]".rjust(22, ' '), 
+                "toggle c (tg c)".rjust(15, ' '),
+                "[column/all]".rjust(22, ' '), 
                 "turn on/off the visibility of a column".rjust(45, ' '),
                 "\n"
             )
             print(
                 "   ",
-                "data (dt)".rjust(12, ' '), 
+                "toggle l (tg l)".rjust(15, ' '),
+                "[layout/all]".rjust(22, ' '), 
+                "turn on/off the visibility of a layout".rjust(45, ' '),
+                "\n"
+            )
+            print(
+                "   ",
+                "data (dt)".rjust(15, ' '), 
                 "[path/to/file]".rjust(22, ' '), 
                 "set the data to use for the analysis".rjust(45, ' '),
                 "\n"
             )
             print(
                 "   ",
-                "thumb (tb)".rjust(12, ' '), 
-                "[LT/RT]".rjust(22, ' '),
+                "thumb (tb)".rjust(15, ' '), 
+                "[LT/RT/NONE]".rjust(22, ' '),
                 "change which thumb is used for space".rjust(45, ' '),
+                "\n"
+            )
+            print(
+                "   ",
+                "reset".rjust(15, ' '), 
+                "[]".rjust(22, ' '),
+                "set the config to its default settings".rjust(45, ' '),
                 "\n"
             )
 
