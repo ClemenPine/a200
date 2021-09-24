@@ -1,3 +1,5 @@
+import sys
+import os
 import json
 import layout, analyzer
 import termcolor as tmc
@@ -6,7 +8,7 @@ from typing import Dict, List
 JSON = Dict[str, any]
 
 
-def print_color(item: JSON, dtype: str, data: List):
+def get_color(item: JSON, dtype: str, data: List):
     percent = 0
     for result in data:
         if item['data'][dtype] > result['data'][dtype]:
@@ -27,18 +29,18 @@ def print_color(item: JSON, dtype: str, data: List):
         return '\033[38;5;250m' + string + '\033[0m'
 
 
-def get_results(filename: str, thumb: str='LT'):
-    layouts = layout.load_dir('layouts')
-    data = json.load(open(filename, 'r'))
+def get_results(config: JSON):
+    layouts = layout.load_dir(config['layoutdir'])
+    data = json.load(open(config['datafile'], 'r'))
 
     results = {
-        'file': filename,
+        'file': data['file'],
         'sort': 'name',
         'data': []
     }
 
     for keys in layouts:
-        counts = analyzer.count_trigrams(keys, data, thumb)
+        counts = analyzer.count_trigrams(keys, data, config['thumb-space'])
         results['data'].append(
             {
                 'name': keys['name'],
@@ -46,50 +48,114 @@ def get_results(filename: str, thumb: str='LT'):
             }
         )
 
-    sort_results(results, 'name', high=False)
+    sort_results(results, config)
     return results
 
 
-def sort_results(results: List[dict], sort: str, high: bool=True):
+def sort_results(results: List[dict], config: JSON):
 
-    results['sort'] = sort
-    if (sort == 'name'):
-        results['data'] = sorted(results['data'], key=lambda x : x['name'].lower(), reverse=high)
+    results['sort'] = config['sort']
+    if (config['sort'] == 'name'):
+        results['data'] = sorted(results['data'], key=lambda x : x['name'].lower(), reverse=config['sort-high'])
     else:
-        results['data'] = sorted(results['data'], key=lambda x : x['data'][sort], reverse=high)
+        results['data'] = sorted(results['data'], key=lambda x : x['data'][config['sort']], reverse=config['sort-high'])
 
     return results
-         
 
 
-def show_results(results: List[dict]):
+def show_results(results: List[dict], config: JSON):
+
     print(results['file'].upper())
-    print(
-        ("sort by " + results['sort'].upper() + ":").ljust(22, ' '), 
-        'alternate'.rjust(8, ' '),
-        'roll'.rjust(8, ' '),
-        'redirect'.rjust(8, ' '),
-        'onehand'.rjust(8, ' '),
-        'sfb'.rjust(8, ' '),
-        'dsfb'.rjust(8, ' '),
-        # 'sfT'.rjust(8, ' '),
-        # 'sfR'.rjust(8, ' '),
-    )
+    print(("sort by " + results['sort'].upper() + ":").ljust(22, ' '), end=' ')
+
+    for trigram_type in config['columns']:
+        if config['columns'][trigram_type]:
+            print(trigram_type.rjust(8, ' '), end=' ')
+    print()
+
     for item in results['data']:
-        print(
-            (item['name'] + '\033[38;5;250m' + ' ').ljust(36, '-') + '\033[0m', 
-            print_color(item, 'alternate', results['data']),
-            print_color(item, 'roll', results['data']),
-            print_color(item, 'redirect', results['data']),
-            print_color(item, 'onehand', results['data']),
-            print_color(item, 'sfb', results['data']),
-            print_color(item, 'dsfb', results['data']),
-            # print_color(item, 'sfT', results['data']),
-            # print_color(item, 'sfR', results['data']),
-        )
+        print((item['name'] + '\033[38;5;250m' + ' ').ljust(36, '-') + '\033[0m', end=' ')
+        for trigram_type in config['columns']:
+            if config['columns'][trigram_type]:
+                print(get_color(item, trigram_type, results['data']), end=' ')
+        print()
 
 
 if __name__ == "__main__":
-    results = get_results('data/200-data.json')
-    #results = sort_results(results, 'redirect')
-    show_results(results)
+    
+    config = json.load(open('config.json', 'r'))
+
+    if len(sys.argv) > 1:
+
+        # toggle columns as visible or not
+        if sys.argv[1] in ['toggle', 'tg']:
+            if len(sys.argv) != 3:
+                print("usage: ./" + sys.argv[0] + " toggle [column]")
+                exit()
+
+            if not sys.argv[2] in config['columns']:
+                print("[" + sys.argv[2] + "] is not a valid column name")
+                exit()
+
+            config['columns'][sys.argv[2]] = not config['columns'][sys.argv[2]]
+        
+        elif sys.argv[1] in ['sort', 'st']:
+            if not 2 < len(sys.argv) < 5:
+                print("usage: ./" + sys.argv[0] + " sort [column] {high/low}")
+                exit()
+
+            if not (
+                sys.argv[2] in config['columns'] or 
+                sys.argv[2] == 'name' or
+                sys.argv[2] in ['high', 'low']
+            ):
+                print("[" + sys.argv[2] + "] is not a valid column name")
+                exit()
+
+            if len(sys.argv) == 4 and not sys.argv[3] in ['high', 'low']:
+                print("[" + sys.argv[3] + "] is not a valid sort direction")
+                exit()
+
+            if sys.argv[2] == 'high':
+                config['sort-high'] = True
+            elif sys.argv[2] == 'low':
+                config['sort-high'] = False
+            else:
+                config['sort'] = sys.argv[2]
+
+            if len(sys.argv) == 4:
+                if sys.argv[3] == 'high':
+                    config['sort-high'] = True
+                else:
+                    config['sort-high'] = False
+
+            if sys.argv[2] == 'name' and len(sys.argv) != 4:
+                config['sort-high'] = False
+        
+        elif sys.argv[1] in ['thumb', 'tb']:
+            if len(sys.argv) != 3:
+                print("usage: ./" + sys.argv[0] + " thumb [LT/RT]")
+                exit()
+
+            if not sys.argv[2].upper() in ['LT', 'RT']:
+                print("[" + sys.argv[2] + "] is not a valid thumb name")
+                exit()
+
+            config['thumb-space'] = sys.argv[2].upper()
+
+        elif sys.argv[1] in ['data', 'dt']:
+            if len(sys.argv) != 3:
+                print("usage: ./" + sys.argv[0] + " data [path/to/file]")
+                exit()
+
+            if not os.path.isfile(sys.argv[2]):
+                print("[" + sys.argv[2] + "] is not a valid filename")
+                exit()
+
+            config['datafile'] = sys.argv[2]
+
+    results = get_results(config)
+    show_results(results, config)
+
+    with open('config.json', 'w') as f:
+        f.write(json.dumps(config, indent=4))
