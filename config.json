@@ -1,0 +1,17 @@
+{
+    "layoutdir": "layouts",
+    "datafile": "data/200-data.json",
+    "thumb-space": "LT",
+    "sort": "redirect",
+    "sort-high": false,
+    "columns": {
+        "alternate": true,
+        "roll": true,
+        "redirect": true,
+        "onehand": true,
+        "sfb": true,
+        "dsfb": true,
+        "sfT": false,
+        "sfR": false
+    }
+}
