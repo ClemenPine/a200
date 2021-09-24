@@ -8,6 +8,28 @@ from typing import Dict, List
 JSON = Dict[str, any]
 
 
+def init_config():
+    config = {
+        "layoutdir": "layouts",
+        "datafile": "data/200-data.json",
+        "thumb-space": "LT",
+        "sort": "name",
+        "sort-high": False,
+        "columns": {
+            "alternate": True,
+            "roll": True,
+            "redirect": True,
+            "onehand": True,
+            "sfb": True,
+            "dsfb": True,
+            "sfT": False,
+            "sfR": False
+        }
+    }
+    
+    return config
+
+
 def get_color(item: JSON, dtype: str, data: List):
     percent = 0
     for result in data:
@@ -83,7 +105,10 @@ def show_results(results: List[dict], config: JSON):
 
 if __name__ == "__main__":
     
-    config = json.load(open('config.json', 'r'))
+    try:
+        config = json.load(open('config.json', 'r'))
+    except FileNotFoundError:
+        config = init_config()
 
     if len(sys.argv) > 1:
 
