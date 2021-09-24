@@ -1,0 +1,475 @@
+{
+    "name": "TEMPLATE",
+    "keys": {
+        "`": {
+            "finger": "LP",
+            "template": true,
+            "shift": false
+        },
+        "~": {
+            "finger": "LP",
+            "template": true,
+            "shift": true
+        },
+        "1": {
+            "finger": "LP",
+            "template": true,
+            "shift": false
+        },
+        "!": {
+            "finger": "LP",
+            "template": true,
+            "shift": true
+        },
+        "2": {
+            "finger": "LR",
+            "template": true,
+            "shift": false
+        },
+        "@": {
+            "finger": "LR",
+            "template": true,
+            "shift": true
+        },
+        "3": {
+            "finger": "LM",
+            "template": true,
+            "shift": false
+        },
+        "#": {
+            "finger": "LM",
+            "template": true,
+            "shift": true
+        },
+        "4": {
+            "finger": "LI",
+            "template": true,
+            "shift": false
+        },
+        "$": {
+            "finger": "LI",
+            "template": true,
+            "shift": true
+        },
+        "5": {
+            "finger": "LI",
+            "template": true,
+            "shift": false
+        },
+        "%": {
+            "finger": "LI",
+            "template": true,
+            "shift": true
+        },
+        "6": {
+            "finger": "RI",
+            "template": true,
+            "shift": false
+        },
+        "^": {
+            "finger": "RI",
+            "template": true,
+            "shift": true
+        },
+        "7": {
+            "finger": "RI",
+            "template": true,
+            "shift": false
+        },
+        "&": {
+            "finger": "RI",
+            "template": true,
+            "shift": true
+        },
+        "8": {
+            "finger": "RM",
+            "template": true,
+            "shift": false
+        },
+        "*": {
+            "finger": "RM",
+            "template": true,
+            "shift": true
+        },
+        "9": {
+            "finger": "RR",
+            "template": true,
+            "shift": false
+        },
+        "(": {
+            "finger": "RR",
+            "template": true,
+            "shift": true
+        },
+        "0": {
+            "finger": "RP",
+            "template": true,
+            "shift": false
+        },
+        ")": {
+            "finger": "RP",
+            "template": true,
+            "shift": true
+        },
+        "-": {
+            "finger": "RP",
+            "template": true,
+            "shift": false
+        },
+        "_": {
+            "finger": "RP",
+            "template": true,
+            "shift": true
+        },
+        "=": {
+            "finger": "RP",
+            "template": true,
+            "shift": false
+        },
+        "+": {
+            "finger": "RP",
+            "template": true,
+            "shift": true
+        },
+        "q": {
+            "finger": "LP",
+            "template": true,
+            "shift": false
+        },
+        "Q": {
+            "finger": "LP",
+            "template": true,
+            "shift": true
+        },
+        "w": {
+            "finger": "LR",
+            "template": true,
+            "shift": false
+        },
+        "W": {
+            "finger": "LR",
+            "template": true,
+            "shift": true
+        },
+        "e": {
+            "finger": "LM",
+            "template": true,
+            "shift": false
+        },
+        "E": {
+            "finger": "LM",
+            "template": true,
+            "shift": true
+        },
+        "r": {
+            "finger": "LI",
+            "template": true,
+            "shift": false
+        },
+        "R": {
+            "finger": "LI",
+            "template": true,
+            "shift": true
+        },
+        "t": {
+            "finger": "LI",
+            "template": true,
+            "shift": false
+        },
+        "T": {
+            "finger": "LI",
+            "template": true,
+            "shift": true
+        },
+        "y": {
+            "finger": "RI",
+            "template": true,
+            "shift": false
+        },
+        "Y": {
+            "finger": "RI",
+            "template": true,
+            "shift": true
+        },
+        "u": {
+            "finger": "RI",
+            "template": true,
+            "shift": false
+        },
+        "U": {
+            "finger": "RI",
+            "template": true,
+            "shift": true
+        },
+        "i": {
+            "finger": "RM",
+            "template": true,
+            "shift": false
+        },
+        "I": {
+            "finger": "RM",
+            "template": true,
+            "shift": true
+        },
+        "o": {
+            "finger": "RR",
+            "template": true,
+            "shift": false
+        },
+        "O": {
+            "finger": "RR",
+            "template": true,
+            "shift": true
+        },
+        "p": {
+            "finger": "RP",
+            "template": true,
+            "shift": false
+        },
+        "P": {
+            "finger": "RP",
+            "template": true,
+            "shift": true
+        },
+        "[": {
+            "finger": "RP",
+            "template": true,
+            "shift": false
+        },
+        "{": {
+            "finger": "RP",
+            "template": true,
+            "shift": true
+        },
+        "]": {
+            "finger": "RP",
+            "template": true,
+            "shift": false
+        },
+        "}": {
+            "finger": "RP",
+            "template": true,
+            "shift": true
+        },
+        "\\": {
+            "finger": "RP",
+            "template": true,
+            "shift": false
+        },
+        "|": {
+            "finger": "RP",
+            "template": true,
+            "shift": true
+        },
+        "a": {
+            "finger": "LP",
+            "template": true,
+            "shift": false
+        },
+        "A": {
+            "finger": "LP",
+            "template": true,
+            "shift": true
+        },
+        "s": {
+            "finger": "LR",
+            "template": true,
+            "shift": false
+        },
+        "S": {
+            "finger": "LR",
+            "template": true,
+            "shift": true
+        },
+        "d": {
+            "finger": "LM",
+            "template": true,
+            "shift": false
+        },
+        "D": {
+            "finger": "LM",
+            "template": true,
+            "shift": true
+        },
+        "f": {
+            "finger": "LI",
+            "template": true,
+            "shift": false
+        },
+        "F": {
+            "finger": "LI",
+            "template": true,
+            "shift": true
+        },
+        "g": {
+            "finger": "LI",
+            "template": true,
+            "shift": false
+        },
+        "G": {
+            "finger": "LI",
+            "template": true,
+            "shift": true
+        },
+        "h": {
+            "finger": "RI",
+            "template": true,
+            "shift": false
+        },
+        "H": {
+            "finger": "RI",
+            "template": true,
+            "shift": true
+        },
+        "j": {
+            "finger": "RI",
+            "template": true,
+            "shift": false
+        },
+        "J": {
+            "finger": "RI",
+            "template": true,
+            "shift": true
+        },
+        "k": {
+            "finger": "RM",
+            "template": true,
+            "shift": false
+        },
+        "K": {
+            "finger": "RM",
+            "template": true,
+            "shift": true
+        },
+        "l": {
+            "finger": "RR",
+            "template": true,
+            "shift": false
+        },
+        "L": {
+            "finger": "RR",
+            "template": true,
+            "shift": true
+        },
+        ";": {
+            "finger": "RP",
+            "template": true,
+            "shift": false
+        },
+        ":": {
+            "finger": "RP",
+            "template": true,
+            "shift": true
+        },
+        "'": {
+            "finger": "RP",
+            "template": true,
+            "shift": false
+        },
+        "\"": {
+            "finger": "RP",
+            "template": true,
+            "shift": true
+        },
+        "z": {
+            "finger": "LP",
+            "template": true,
+            "shift": false
+        },
+        "Z": {
+            "finger": "LP",
+            "template": true,
+            "shift": true
+        },
+        "x": {
+            "finger": "LR",
+            "template": true,
+            "shift": false
+        },
+        "X": {
+            "finger": "LR",
+            "template": true,
+            "shift": true
+        },
+        "c": {
+            "finger": "LM",
+            "template": true,
+            "shift": false
+        },
+        "C": {
+            "finger": "LM",
+            "template": true,
+            "shift": true
+        },
+        "v": {
+            "finger": "LI",
+            "template": true,
+            "shift": false
+        },
+        "V": {
+            "finger": "LI",
+            "template": true,
+            "shift": true
+        },
+        "b": {
+            "finger": "LI",
+            "template": true,
+            "shift": false
+        },
+        "B": {
+            "finger": "LI",
+            "template": true,
+            "shift": true
+        },
+        "n": {
+            "finger": "RI",
+            "template": true,
+            "shift": false
+        },
+        "N": {
+            "finger": "RI",
+            "template": true,
+            "shift": true
+        },
+        "m": {
+            "finger": "RI",
+            "template": true,
+            "shift": false
+        },
+        "M": {
+            "finger": "RI",
+            "template": true,
+            "shift": true
+        },
+        ",": {
+            "finger": "RM",
+            "template": true,
+            "shift": false
+        },
+        "<": {
+            "finger": "RM",
+            "template": true,
+            "shift": true
+        },
+        ".": {
+            "finger": "RR",
+            "template": true,
+            "shift": false
+        },
+        ">": {
+            "finger": "RR",
+            "template": true,
+            "shift": true
+        },
+        "/": {
+            "finger": "RP",
+            "template": true,
+            "shift": false
+        },
+        "?": {
+            "finger": "RP",
+            "template": true,
+            "shift": true
+        }
+    }
+}

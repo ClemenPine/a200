@@ -15,10 +15,7 @@ def load_file(filename: str):
         "ABCDEFGHIJKLMNOPQRSTUVWXYZ<>?:\"_+{}"
     ))
 
-    keys = {
-        'name': "[unknown]",
-        'keys': {},
-    }
+    keys = json.load(open('TEMPLATE.json', 'r'))
 
     with open(filename, 'r') as f:
         tokens = []
