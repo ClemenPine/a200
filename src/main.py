@@ -225,6 +225,17 @@ if __name__ == "__main__":
 
             config['datafile'] = sys.argv[2]
 
+        elif sys.argv[1] in ['theme', 'tm']:
+            if len(sys.argv) != 3:
+                print("usage: ./" + sys.argv[0] + " theme [theme]")
+                exit()
+
+            if not os.path.isfile(config['themedir'] + "/" + sys.argv[2] + '.json'):
+                print("[" + sys.argv[2] + "] is not a valid theme")
+                exit()
+
+            config['theme'] = sys.argv[2]
+
         elif sys.argv[1] in ['reset']:
             config = init_config()
 
@@ -263,6 +274,13 @@ if __name__ == "__main__":
                 "thumb (tb)".rjust(15, ' '), 
                 "[LT/RT/NONE]".rjust(22, ' '),
                 "change which thumb is used for space".rjust(45, ' '),
+                "\n"
+            )
+            print(
+                "   ",
+                "theme".rjust(15, ' '), 
+                "[theme]".rjust(22, ' '),
+                "set the theme".rjust(45, ' '),
                 "\n"
             )
             print(

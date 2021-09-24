@@ -1,0 +1,10 @@
+{
+    "name": "noir",
+    "colors": {
+        "base": "245",
+        "highest": "255",
+        "high": "250",
+        "low": "243",
+        "lowest": "240"
+    }
+}

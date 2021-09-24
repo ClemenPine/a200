@@ -1,0 +1,10 @@
+{
+    "name": "none",
+    "colors": {
+        "base": "15",
+        "highest": "15",
+        "high": "15",
+        "low": "15",
+        "lowest": "15"
+    }
+}
