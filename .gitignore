@@ -1,5 +1,2 @@
 # ignore pycache
 __pycache__/
-
-# ignore config 
-config.json
