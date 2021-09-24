@@ -65,6 +65,10 @@ def count_trigrams(keys: JSON, data: JSON, thumb: str):
 
     for trigram in data['3-grams']:
         fingers = []
+
+        if thumb == 'NONE' and ' ' in trigram:
+            continue
+
         for char in trigram:
             if char == ' ':
                 fingers.append(thumb)
