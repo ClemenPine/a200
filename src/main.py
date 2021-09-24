@@ -1,56 +1,95 @@
 import json
 import layout, analyzer
+import termcolor as tmc
+from typing import Dict, List
 
-layouts = layout.load_dir('layouts')
-data = json.load(open('data/200-data.json', 'r'))
-
-results_L = []
-results_R = []
-
-for keys in layouts:
-    counts = analyzer.count_trigrams(keys, data, thumb="LT")
-    results_L.append(
-        {
-            'name': keys['name'],
-            'data': counts,
-        }
-    )
-
-for keys in layouts:
-    counts = analyzer.count_trigrams(keys, data, thumb="RT")
-    results_R.append(
-        {
-            'name': keys['name'],
-            'data': counts,
-        }
-    )
+JSON = Dict[str, any]
 
 
-results = []
-for item_L, item_R in zip(results_L, results_R):
-    if (item_L['name'] != item_R['name']):
-        raise("ERROR")
-        exit()
+def print_color(item: JSON, dtype: str, data: List):
+    percent = 0
+    for result in data:
+        if item['data'][dtype] > result['data'][dtype]:
+            percent += 1
+    percent /= len(data)
+
+    string = "{:.2%}".format(item['data'][dtype]).rjust(6, ' ') + '  '
+    if percent > .9:
+        return '\033[38;5;46m' + string + '\033[0m' # bright green
+    elif percent > .7:
+        return '\033[38;5;2m' + string + '\033[0m' # green
+
+    elif percent < .1:
+        return '\033[38;5;9m' + string + '\033[0m' # bright red
+    elif percent < .3:
+        return '\033[38;5;124m' + string + '\033[0m' # red
     else:
-        results.append(
+        return '\033[38;5;250m' + string + '\033[0m'
+
+
+def get_results(filename: str, thumb: str='LT'):
+    layouts = layout.load_dir('layouts')
+    data = json.load(open(filename, 'r'))
+
+    results = {
+        'file': filename,
+        'sort': 'name',
+        'data': []
+    }
+
+    for keys in layouts:
+        counts = analyzer.count_trigrams(keys, data, thumb)
+        results['data'].append(
             {
-                'name': item_L['name'],
-                'data_L': item_L['data'],
-                'data_R': item_R['data'],
+                'name': keys['name'],
+                'data': counts,
             }
         )
 
-trigram_type = 'onehand'
-highest_to_lowest = True
+    sort_results(results, 'name', high=False)
+    return results
 
-results = sorted(results, key=lambda x : x['data_L'][trigram_type], reverse=highest_to_lowest)
-print((trigram_type + " data:").ljust(27, ' '), 'Left    Right   Change')
-for item in results:
+
+def sort_results(results: List[dict], sort: str, high: bool=True):
+
+    results['sort'] = sort
+    if (sort == 'name'):
+        results['data'] = sorted(results['data'], key=lambda x : x['name'].lower(), reverse=high)
+    else:
+        results['data'] = sorted(results['data'], key=lambda x : x['data'][sort], reverse=high)
+
+    return results
+         
+
+
+def show_results(results: List[dict]):
+    print(results['file'].upper())
     print(
-        (item['name'] + ' ').ljust(25, '-'), 
-        "{:.2%}".format(item['data_L'][trigram_type]).rjust(6, ' '),
-        " ",
-        "{:.2%}".format(item['data_R'][trigram_type]).rjust(6, ' '),
-        "",
-        "{:+.2%}".format(item['data_R'][trigram_type] - item['data_L'][trigram_type]).rjust(7, ' '),
+        ("sort by " + results['sort'].upper() + ":").ljust(22, ' '), 
+        'alternate'.rjust(8, ' '),
+        'roll'.rjust(8, ' '),
+        'redirect'.rjust(8, ' '),
+        'onehand'.rjust(8, ' '),
+        'sfb'.rjust(8, ' '),
+        'dsfb'.rjust(8, ' '),
+        # 'sfT'.rjust(8, ' '),
+        # 'sfR'.rjust(8, ' '),
     )
+    for item in results['data']:
+        print(
+            (item['name'] + '\033[38;5;250m' + ' ').ljust(36, '-') + '\033[0m', 
+            print_color(item, 'alternate', results['data']),
+            print_color(item, 'roll', results['data']),
+            print_color(item, 'redirect', results['data']),
+            print_color(item, 'onehand', results['data']),
+            print_color(item, 'sfb', results['data']),
+            print_color(item, 'dsfb', results['data']),
+            # print_color(item, 'sfT', results['data']),
+            # print_color(item, 'sfR', results['data']),
+        )
+
+
+if __name__ == "__main__":
+    results = get_results('data/200-data.json')
+    #results = sort_results(results, 'redirect')
+    show_results(results)
