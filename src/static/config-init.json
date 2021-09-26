@@ -6,7 +6,7 @@
     "datafile": "200-data.json",
     "thumb-space": "LT",
     "sort": {},
-    "sort-high": false,
+    "sort-high": true,
     "columns": {
         "trigrams": {
             "alternate": true,
