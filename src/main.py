@@ -2,78 +2,53 @@ import sys
 import os
 import json
 import layout, analyzer
-import termcolor as tmc
 from typing import Dict, List
 
 JSON = Dict[str, any]
 
 
 def init_config():
-    config = {
-        "layoutdir": "layouts",
-        "themedir": "themes",
-        "theme": "festive",
-        "datafile": "data/200-data.json",
-        "thumb-space": "LT",
-        "sort": "name",
-        "sort-high": False,
-        "columns": {
-            "alternate": True,
-            "roll": True,
-            "redirect": True,
-            "onehand": True,
-            "sfb": True,
-            "dsfb": True,
-            "sfT": False,
-            "sfR": False
-        },
-        "finger-use": {
-            "LP": False,
-            "LR": False,
-            "LM": False,
-            "LI": False,
-            "RI": False,
-            "RM": False,
-            "RR": False,
-            "RP": False,
-            "LT": False,
-        },
-        "layouts": {}
-    }
-
+    
+    config = json.load(open('src/static/config-init.json', 'r'))
     layouts = layout.load_dir(config['layoutdir'])
+
     for keys in layouts:
         config['layouts'][keys['name'].lower()] = True
 
     return config
 
 
-def get_color(item: JSON, ctype: str, dtype: str, data: List):
+def print_color(item: JSON, section: str, column_name: str, data: JSON):
+
+    # get percentage of layouts worse
     percent = 0
-    for result in data:
-        if item[ctype][dtype] > result[ctype][dtype]:
+    for result in data['data']:
+        if item[section][column_name] > result[section][column_name]:
             percent += 1
-    percent /= len(data)
+    percent /= len(data['data'])
 
+    # get string
+    string = "{:.2%}".format(item[section][column_name]).rjust(6, ' ') + '  '
+
+    # color printing based on percentage
     colors = json.load(open(config['themedir'] + "/" + config['theme'] + ".json"))['colors']
-
-    string = "{:.2%}".format(item[ctype][dtype]).rjust(6, ' ') + '  '
     if percent > .9:
-        return '\033[38;5;' + colors['highest'] + 'm' + string + '\033[0m'
+        print('\033[38;5;' + colors['highest'] + 'm' + string + '\033[0m', end=' ')
     elif percent > .7:
-        return '\033[38;5;' + colors['high'] + 'm' + string + '\033[0m'
+        print('\033[38;5;' + colors['high'] + 'm' + string + '\033[0m', end=' ')
 
     elif percent < .1:
-        return '\033[38;5;' + colors['lowest'] + 'm' + string + '\033[0m'
+        print('\033[38;5;' + colors['lowest'] + 'm' + string + '\033[0m', end=' ')
     elif percent < .3:
-        return '\033[38;5;' + colors['low'] + 'm' + string + '\033[0m'
+        print('\033[38;5;' + colors['low'] + 'm' + string + '\033[0m', end=' ')
     else:
-        return '\033[38;5;' + colors['base'] + 'm' + string + '\033[0m'
+        print('\033[38;5;' + colors['base'] + 'm' + string + '\033[0m', end=' ')
 
 
 def get_results(config: JSON):
+
     layouts = layout.load_dir(config['layoutdir'])
-    data = json.load(open(config['datafile'], 'r'))
+    data = json.load(open(config['datadir'] + '/' + config['datafile'], 'r'))
 
     results = {
         'file': data['file'],
@@ -86,7 +61,7 @@ def get_results(config: JSON):
         results['data'].append(
             {
                 'name': keys['name'],
-                'data': trigram_counts,
+                'trigrams': trigram_counts,
                 'finger-use': finger_use,
             }
         )
@@ -97,240 +72,157 @@ def get_results(config: JSON):
 
 def sort_results(results: List[dict], config: JSON):
 
-    results['sort'] = config['sort']
+    section = [item for item in config['columns'] if config['sort'] in config['columns'][item]]
+
     if config['sort'] == 'name':
         results['data'] = sorted(results['data'], key=lambda x : x['name'].lower(), reverse=config['sort-high'])
-    elif config['sort'] in config['columns']:
-        results['data'] = sorted(results['data'], key=lambda x : x['data'][config['sort']], reverse=config['sort-high'])
-    elif config['sort'] in config['finger-use']:
-        results['data'] = sorted(results['data'], key=lambda x : x['finger-use'][config['sort']], reverse=config['sort-high'])
-    else:
-        raise("invalid sort parameter")
-
-    return results
+    elif section:
+        results['data'] = sorted(results['data'], key=lambda x : x[section[0]][config['sort']], reverse=config['sort-high'])
 
 
 def show_results(results: List[dict], config: JSON):
 
+    # print metadata
     print(results['file'].upper())
     print("thumb:", config['thumb-space'])
-    print(("sort by " + results['sort'].upper() + ":").ljust(22, ' '), end=' ')
+    print(("sort by " + config['sort'].upper() + ":").ljust(22, ' '), end=' ')
 
-    for trigram_type in config['columns']:
-        if config['columns'][trigram_type]:
-            print(trigram_type.rjust(8, ' '), end=' ')
-    for finger_type in config['finger-use']:
-        if config['finger-use'][finger_type]:
-            print(finger_type.rjust(8, ' '), end=' ')
+    # print column names
+    for section in config['columns']:
+        for column_name in config['columns'][section]:
+            if config['columns'][section][column_name]:
+                print(column_name.rjust(8, ' '), end=' ')
     print()
 
+    # print rows
     for item in results['data']:
+
+        # ignore hidden layouts 
         if not config['layouts'][item['name'].lower()]:
             continue
 
+        # print layout stats
         print((item['name'] + '\033[38;5;250m' + ' ').ljust(36, '-') + '\033[0m', end=' ')
-        for trigram_type in config['columns']:
-            if config['columns'][trigram_type]:
-                print(get_color(item, 'data', trigram_type, results['data']), end=' ')
-        for finger_type in config['finger-use']:
-            if config['finger-use'][finger_type]:
-                print(get_color(item, 'finger-use', finger_type, results['data']), end=' ')
+        for section in config['columns']:
+            for column_name in config['columns'][section]:
+                if config['columns'][section][column_name]:
+                    print_color(item, section, column_name, results)
         print()
+        
+
+def get_states(section: JSON):
+
+    if type(section) == bool:
+        return [section]
+
+    states = []
+    for item in section:
+        states += get_states(section[item])
+
+    return states
 
 
-if __name__ == "__main__":
+def find_section(section: JSON, target: str):
     
+    if type(section) == bool:
+        return []
+
+    matches = []
+    for item in section:
+        if item == target:
+            matches.append(section)
+        
+        matches += find_section(section[item], target)
+
+    return matches
+
+
+def set_states(section: JSON, new_state: bool):
+
+    for item in section:
+        if type(section[item]) == bool:
+            section[item] = new_state
+        else:
+            set_states(section[item], new_state)
+
+
+def parse_args(name='', action=None, *args):
+
+    # open/init config
     try:
         config = json.load(open('config.json', 'r'))
     except FileNotFoundError:
         config = init_config()
 
-    if len(sys.argv) > 1:
+    # parse args
+    if action in ['toggle', 'tg', 'tc', 'tl']:
 
-        # toggle columns/layouts as visible or not
-        if sys.argv[1] in ['toggle', 'tg']:
-            if len(sys.argv) != 4:
-                if len(sys.argv) == 3 and sys.argv[2] == 'c':
-                    print("usage: ./" + sys.argv[0] + " toggle c [column]")
-                    exit()
-                elif len(sys.argv) == 3 and sys.argv[2] == 'l':
-                    print("usage: ./" + sys.argv[0] + " toggle l [layout]")
-                    exit()
-                else:
-                    print("usage: ./" + sys.argv[0] + " toggle c/l [column/layout]")
-                    exit()
-
-            if sys.argv[2] in ['column', 'c']:
-                if sys.argv[3] in ['all', 'a']:
-                    if (
-                        True in config['columns'].values() or
-                        True in config['finger-use'].values()
-                    ):
-                        new_state = False
-                    else:
-                        new_state = True
-
-                    for column in config['columns']:
-                        config['columns'][column] = new_state
-                    for column in config['finger-use']:
-                        config['finger-use'][column] = new_state
-                elif sys.argv[3] in config['columns']:
-                    config['columns'][sys.argv[3]] = not config['columns'][sys.argv[3]]
-                elif sys.argv[3] in config['finger-use']:
-                    config['finger-use'][sys.argv[3]] = not config['finger-use'][sys.argv[3]]
-                else:
-                    print("[" + sys.argv[3] + "] is not a valid column name")
-                    exit()
-            elif sys.argv[2] in ['layout', 'l']:
-                if sys.argv[3] in ['all', 'a']:
-                    if True in config['layouts'].values():
-                        new_state = False
-                    else:
-                        new_state = True
-
-                    for keys in config['layouts']:
-                        config['layouts'][keys] = new_state
-                elif sys.argv[3] in config['layouts']:
-                    config['layouts'][sys.argv[3]] = not config['layouts'][sys.argv[3]]
-                else:
-                    print("[" + sys.argv[3] + "] is not a valid layout name")
-                    exit()
-            else:
-                print("usage: ./" + sys.argv[0] + " toggle c/l [column/layout]")
-                exit()
-        
-        elif sys.argv[1] in ['sort', 'st']:
-            if not 2 < len(sys.argv) < 5:
-                print("usage: ./" + sys.argv[0] + " sort [column] {high/low}")
-                exit()
-
-            if not (
-                sys.argv[2] in config['columns'] or 
-                sys.argv[2] in config['finger-use'] or
-                sys.argv[2] == 'name' or
-                sys.argv[2] in ['high', 'low']
-            ):
-                print("[" + sys.argv[2] + "] is not a valid column name")
-                exit()
-
-            if len(sys.argv) == 4 and not sys.argv[3] in ['high', 'low']:
-                print("[" + sys.argv[3] + "] is not a valid sort direction")
-                exit()
-
-            if sys.argv[2] == 'high':
-                config['sort-high'] = True
-            elif sys.argv[2] == 'low':
-                config['sort-high'] = False
-            else:
-                config['sort'] = sys.argv[2]
-
-            if len(sys.argv) == 4:
-                if sys.argv[3] == 'high':
-                    config['sort-high'] = True
-                else:
-                    config['sort-high'] = False
-
-            if sys.argv[2] == 'name' and len(sys.argv) != 4:
-                config['sort-high'] = False
-        
-        elif sys.argv[1] in ['thumb', 'tb']:
-            if len(sys.argv) != 3:
-                print("usage: ./" + sys.argv[0] + " thumb [LT/RT/NONE]")
-                exit()
-
-            if not sys.argv[2].upper() in ['LT', 'RT', 'NONE']:
-                print("[" + sys.argv[2] + "] is not a valid thumb name")
-                exit()
-
-            config['thumb-space'] = sys.argv[2].upper()
-
-        elif sys.argv[1] in ['data', 'dt']:
-            if len(sys.argv) != 3:
-                print("usage: ./" + sys.argv[0] + " data [path/to/file]")
-                exit()
-
-            if not os.path.isfile(sys.argv[2]):
-                print("[" + sys.argv[2] + "] is not a valid filename")
-                exit()
-
-            config['datafile'] = sys.argv[2]
-
-        elif sys.argv[1] in ['theme', 'tm']:
-            if len(sys.argv) != 3:
-                print("usage: ./" + sys.argv[0] + " theme [theme]")
-                exit()
-
-            if not os.path.isfile(config['themedir'] + "/" + sys.argv[2] + '.json'):
-                print("[" + sys.argv[2] + "] is not a valid theme")
-                exit()
-
-            config['theme'] = sys.argv[2]
-
-        elif sys.argv[1] in ['reset']:
-            config = init_config()
-
-        elif sys.argv[1] in ['help', 'hp', 'h', '?']:
-            print("Usage:", sys.argv[0], "[command]", "[arg]", "\n") 
-            print(
-                "   ",
-                "sort (st)".rjust(15, ' '), 
-                "[column] {high/low}".rjust(22, ' '), 
-                "order the list of layouts based on a column".rjust(45, ' '),
-                "\n"
-            )
-            print(
-                "   ",
-                "toggle c (tg c)".rjust(15, ' '),
-                "[column/all]".rjust(22, ' '), 
-                "turn on/off the visibility of a column".rjust(45, ' '),
-                "\n"
-            )
-            print(
-                "   ",
-                "toggle l (tg l)".rjust(15, ' '),
-                "[layout/all]".rjust(22, ' '), 
-                "turn on/off the visibility of a layout".rjust(45, ' '),
-                "\n"
-            )
-            print(
-                "   ",
-                "data (dt)".rjust(15, ' '), 
-                "[path/to/file]".rjust(22, ' '), 
-                "set the data to use for the analysis".rjust(45, ' '),
-                "\n"
-            )
-            print(
-                "   ",
-                "thumb (tb)".rjust(15, ' '), 
-                "[LT/RT/NONE]".rjust(22, ' '),
-                "change which thumb is used for space".rjust(45, ' '),
-                "\n"
-            )
-            print(
-                "   ",
-                "theme".rjust(15, ' '), 
-                "[theme]".rjust(22, ' '),
-                "set the theme".rjust(45, ' '),
-                "\n"
-            )
-            print(
-                "   ",
-                "reset".rjust(15, ' '), 
-                "[]".rjust(22, ' '),
-                "set the config to its default settings".rjust(45, ' '),
-                "\n"
-            )
-
-            exit()
-
+        # parse target and axis
+        if action in ['toggle', 'tg']:
+            if args[0] in ['column', 'c']:
+                axis = 'columns'
+            elif args[0] in ['layout', 'l']:
+                axis = 'layouts'
+            targets = args[1:] 
         else:
-            print(
-                "[" + sys.argv[1] + 
-                "] is not a valid command, type ./" + 
-                sys.argv[0] + 
-                " help for a list of commands"
-            )
-            exit()
+            if action == 'tc':
+                axis = 'columns'
+            elif action == 'tl':
+                axis = 'layouts'
+            targets = args[0:]
+
+        # recursively find and set states for each target
+        for target in targets:
+            if target in ['all', 'a']:
+                set_states(config[axis], not True in get_states(config[axis]))
+            else:
+                section = find_section(config[axis], target)[0]
+                if type(section[target]) == bool:
+                    section[target] = not section[target]
+                else:
+                    set_states(section[target], not True in get_states(section[target]))
+
+    elif action in ['sort', 'st']:
+
+        if find_section(config['columns'], args[0]):
+            config['sort'] = args[0]
+
+        if any(item in args for item in ['high', 'h']):
+            config['sort-high'] = True
+        elif any(item in args for item in ['low', 'l']):
+            config['sort-high'] = False
+
+    elif action in ['thumb', 'tb']:
+        
+        if args[0].upper() in ['LT', 'RT', 'NONE']:
+            config['thumb-space'] = args[0].upper()
+
+    elif action in ['data', 'dt']:
+        
+        if os.path.isfile(config['datadir'] + '/' + args[0]):
+            config['datafile'] = args[0]
+
+    elif action in ['theme', 'tm']:
+
+        if os.path.isfile(config['themedir'] + '/' + args[0] + '.json'):
+            config['theme'] = args[0]
+
+    elif action in ['reset']:
+        
+        config = init_config()
+
+    elif action in ['help', 'hp', 'h', '?']:
+        
+        # TODO
+        print("This is a help page")
+        exit()
+
+    return config
+
+
+if __name__ == "__main__":
+
+    config = parse_args(*sys.argv)
 
     results = get_results(config)
     show_results(results, config)
