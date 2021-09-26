@@ -197,6 +197,9 @@ def parse_args(name='', action=None, *args):
 
         # recursively find and set states for each target
         for target in targets:
+            if axis == 'layouts':
+                target = target.lower()
+
             if target in ['all', 'a']:
                 set_states(config[axis], not True in get_states(config[axis]))
             else:
