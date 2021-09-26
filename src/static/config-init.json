@@ -5,7 +5,7 @@
     "theme": "festive",
     "datafile": "200-data.json",
     "thumb-space": "LT",
-    "sort": "name",
+    "sort": {},
     "sort-high": false,
     "columns": {
         "trigrams": {
