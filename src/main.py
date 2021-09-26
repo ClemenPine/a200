@@ -59,8 +59,8 @@ def get_results(config: JSON):
     }
 
     for keys in layouts:
-        trigram_counts = analyzer.count_trigrams(keys, data, config['thumb-space'])
-        finger_use = analyzer.count_finger_use(keys, data, config['thumb-space'])
+        trigram_counts = analyzer.count_trigrams(keys, data, config)
+        finger_use = analyzer.count_finger_use(keys, data, config)
         results['data'].append(
             {
                 'name': keys['name'],
@@ -250,7 +250,7 @@ def parse_args(name='', action=None, *args):
 
     elif action in ['thumb', 'tb']:
         
-        if args[0].upper() in ['LT', 'RT', 'NONE']:
+        if args[0].upper() in ['LT', 'RT', 'NONE', 'AVG']:
             config['thumb-space'] = args[0].upper()
 
     elif action in ['data', 'dt']:
