@@ -1,0 +1,34 @@
+{
+    "layoutdir": "layouts",
+    "datadir": "data",
+    "themedir": "themes",
+    "theme": "festive",
+    "datafile": "200-data.json",
+    "thumb-space": "LT",
+    "sort": "name",
+    "sort-high": false,
+    "columns": {
+        "trigrams": {
+            "alternate": true,
+            "roll": true,
+            "redirect": true,
+            "onehand": true,
+            "sfb": true,
+            "dsfb": true,
+            "sfT": false,
+            "sfR": false
+        },
+        "finger-use": {
+            "LP": false,
+            "LR": false,
+            "LM": false,
+            "LI": false,
+            "RI": false,
+            "RM": false,
+            "RR": false,
+            "RP": false,
+            "LT": false
+        }
+    },
+    "layouts": {}
+}
