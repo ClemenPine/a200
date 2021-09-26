@@ -18,14 +18,17 @@ def init_config():
     return config
 
 
-def print_color(item: JSON, section: str, column_name: str, data: JSON):
-
-    # get percentage of layouts worse
+def get_layout_percent(item: JSON, section: str, column_name: str, data: JSON):
     percent = 0
     for result in data['data']:
         if item[section][column_name] > result[section][column_name]:
             percent += 1
-    percent /= len(data['data'])
+    return percent / len(data['data'])
+
+def print_color(item: JSON, section: str, column_name: str, data: JSON):
+
+    # get percentage of layouts worse
+    percent = get_layout_percent(item, section, column_name, data)
 
     # get string
     string = "{:.2%}".format(item[section][column_name]).rjust(6, ' ') + '  '
@@ -63,6 +66,7 @@ def get_results(config: JSON):
                 'name': keys['name'],
                 'trigrams': trigram_counts,
                 'finger-use': finger_use,
+                'sort': 0
             }
         )
 
@@ -70,22 +74,42 @@ def get_results(config: JSON):
     return results
 
 
-def sort_results(results: List[dict], config: JSON):
+def sort_results(results: JSON, config: JSON):
 
-    section = [item for item in config['columns'] if config['sort'] in config['columns'][item]]
+    # calulate sort criteria
+    for item in results['data']:
+        for sort in config['sort']:
+            section = [item for item in config['columns'] if sort in config['columns'][item]][0]
+            percent = get_layout_percent(item, section, sort, results)
+            if str(config['sort'][sort])[0] == '-':
+                value = 1 - percent
+            else:
+                value = percent
 
+            item['sort'] += value * abs(config['sort'][sort])
+
+    # sort
     if config['sort'] == 'name':
         results['data'] = sorted(results['data'], key=lambda x : x['name'].lower(), reverse=config['sort-high'])
-    elif section:
-        results['data'] = sorted(results['data'], key=lambda x : x[section[0]][config['sort']], reverse=config['sort-high'])
+    else:
+        results['data'] = sorted(results['data'], key=lambda x : x['sort'], reverse=config['sort-high'])
 
-
-def show_results(results: List[dict], config: JSON):
+def show_results(results: JSON, config: JSON):
 
     # print metadata
     print(results['file'].upper())
-    print("thumb:", config['thumb-space'])
-    print(("sort by " + config['sort'].upper() + ":").ljust(22, ' '), end=' ')
+    print("sort by:", end='   ')
+    for sort in config['sort']:
+        print(
+            sort, 
+            "{:.0%}".format(config['sort'][sort]),
+            end='   '
+        )
+    print()
+
+    # print(("sort by " + config['sort'].upper() + ":").ljust(22, ' '), end=' ')
+    print(("thumb: " + config['thumb-space']).ljust(22, ' '), end=' ')
+
 
     # print column names
     for section in config['columns']:
@@ -123,8 +147,8 @@ def get_states(section: JSON):
 
 
 def find_section(section: JSON, target: str):
-    
-    if type(section) == bool:
+
+    if type(section) != dict:
         return []
 
     matches = []
@@ -184,13 +208,42 @@ def parse_args(name='', action=None, *args):
 
     elif action in ['sort', 'st']:
 
-        if find_section(config['columns'], args[0]):
-            config['sort'] = args[0]
+        config['sort'] = {}
 
-        if any(item in args for item in ['high', 'h']):
-            config['sort-high'] = True
-        elif any(item in args for item in ['low', 'l']):
-            config['sort-high'] = False
+        count = 0
+        total_percent = 0
+
+        for arg in args:
+            # sorting direction
+            if arg in ['high', 'h']:
+                config['sort-high'] = True
+            elif arg in ['low', 'l']:
+                config['sort-high'] = False
+            # parse metric string
+            else:
+                if not '%' in arg:
+                    if '-' in arg:
+                        arg = ('-', arg[1:])
+                    else:
+                        arg = ('', arg)
+                    count += 1
+                else:
+                    arg = arg.split('%')
+                    total_percent += abs(float(arg[0]))
+
+                config['sort'][arg[1]] = arg[0]
+
+        # calculate percent per unassigned metric
+        if count:
+            percent_left = (100 - total_percent) / count
+        else:
+            percent_left = 0
+        
+        # allocate percents and convert to float
+        for item in config['sort']:
+            if config['sort'][item] in ['', '-']:
+                config['sort'][item] += str(percent_left)
+            config['sort'][item] = float(config['sort'][item]) / 100
 
     elif action in ['thumb', 'tb']:
         
