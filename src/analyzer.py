@@ -59,12 +59,12 @@ def count_finger_use(keys: JSON, data: JSON, config: JSON):
         'RM': 0,
         'RR': 0,
         'RP': 0,
-        config['thumb-space']: 0,
+        'TB': 0,
     }
 
     for char in data['1-grams']:
         if char == ' ':
-            counts[config['thumb-space']] = data['1-grams'][char]
+            counts['TB'] = data['1-grams'][char]
         else:
             counts[keys['keys'][char]['finger']] += data['1-grams'][char]
 
