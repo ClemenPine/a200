@@ -52,7 +52,7 @@ def print_color(item: JSON, section: str, column_name: str, data: JSON):
 def get_results(config: JSON):
 
     # open/create results cache
-    cachefile = os.path.join(config['cachedir'], 'cached-' + config['datafile'])
+    cachefile = os.path.join(config['cachedir'], 'cached-' + config['datafile'] + '.json')
 
     if not os.path.isdir(config['cachedir']):
         os.mkdir(config['cachedir'])
@@ -67,7 +67,7 @@ def get_results(config: JSON):
         }
 
     layouts = layout.load_dir(config['layoutdir'])
-    data = json.load(open(config['datadir'] + '/' + config['datafile'], 'r'))
+    data = json.load(open(os.path.join(config['datadir'], config['datafile'] + '.json'), 'r'))
 
     results = {
         'file': data['file'],
