@@ -9,7 +9,7 @@ JSON = Dict[str, any]
 
 def init_config():
     
-    config = json.load(open('src/static/config-init.json', 'r'))
+    config = json.load(open(os.path.join('src', 'static', 'config-init.json'), 'r'))
     layouts = layout.load_dir(config['layoutdir'])
 
     for keys in layouts:
@@ -35,7 +35,7 @@ def print_color(item: JSON, section: str, column_name: str, data: JSON):
     string = "{:.2%}".format(item[section][column_name]).rjust(6, ' ') + '  '
 
     # color printing based on percentage
-    colors = json.load(open(config['themedir'] + "/" + config['theme'] + ".json"))['colors']
+    colors = json.load(open(os.path.join(config['themedir'], config['theme'] + '.json'), 'r'))['colors']
     if percent > .9:
         print('\033[38;5;' + colors['highest'] + 'm' + string + '\033[0m', end=' ')
     elif percent > .7:
@@ -309,12 +309,12 @@ def parse_args(name='', action=None, *args):
 
     elif action in ['data', 'dt']:
         
-        if os.path.isfile(os.path.join(config['datadir'], config['datafile'] + '.json')):
+        if os.path.isfile(os.path.join(config['datadir'], args[0] + '.json')):
             config['datafile'] = args[0]
 
     elif action in ['theme', 'tm']:
 
-        if os.path.isfile(config['themedir'] + '/' + args[0] + '.json'):
+        if os.path.isfile(os.path.join(config['themedir'], args[0] + '.json')):
             config['theme'] = args[0]
 
     elif action in ['reset']:
