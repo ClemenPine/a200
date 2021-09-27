@@ -309,7 +309,7 @@ def parse_args(name='', action=None, *args):
 
     elif action in ['data', 'dt']:
         
-        if os.path.isfile(config['datadir'] + '/' + args[0]):
+        if os.path.isfile(os.path.join(config['datadir'], config['datafile'] + '.json')):
             config['datafile'] = args[0]
 
     elif action in ['theme', 'tm']:
