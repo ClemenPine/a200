@@ -1,9 +1,10 @@
 {
     "layoutdir": "layouts",
     "datadir": "data",
+    "cachedir": "cache",
     "themedir": "themes",
     "theme": "festive",
-    "datafile": "200-data.json",
+    "datafile": "monkeytype-200.json",
     "thumb-space": "LT",
     "sort": {},
     "sort-high": true,
