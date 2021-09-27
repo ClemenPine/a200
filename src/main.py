@@ -25,6 +25,7 @@ def get_layout_percent(item: JSON, section: str, column_name: str, data: JSON):
             percent += 1
     return percent / len(data['data'])
 
+
 def print_color(item: JSON, section: str, column_name: str, data: JSON):
 
     # get percentage of layouts worse
@@ -50,18 +51,79 @@ def print_color(item: JSON, section: str, column_name: str, data: JSON):
 
 def get_results(config: JSON):
 
+    # open/create results cache
+    cachefile = os.path.join(config['cachedir'], 'cached-' + config['datafile'])
+
+    if not os.path.isdir(config['cachedir']):
+        os.mkdir(config['cachedir'])
+
+    if os.path.isfile(cachefile):
+        cache = json.load(open(cachefile, 'r'))
+    else:
+        
+        cache = {
+            'file': config['datafile'],
+            'data': {}
+        }
+
     layouts = layout.load_dir(config['layoutdir'])
     data = json.load(open(config['datadir'] + '/' + config['datafile'], 'r'))
 
     results = {
         'file': data['file'],
-        'data': [],
+        'data': []
     }
 
     for keys in layouts:
-        results['data'].append(analyzer.get_results(keys, data, config))
+        item = {
+            'name': keys['name'],
+            'sort': 0,
+            'trigrams': {},
+            'finger-use': {},
+        }
 
+        # add key
+        if not keys['name'] in cache['data']:
+            cache['data'][keys['name']] = {
+                'trigrams': {}
+            }
+
+        # trigrams
+        if config['thumb-space'] in ['LT', 'RT', 'NONE']:
+            # add thumb type
+            if not config['thumb-space'] in cache['data'][keys['name']]['trigrams']:
+                cache['data'][keys['name']]['trigrams'][config['thumb-space']] = analyzer.count_trigrams(keys, data, config['thumb-space'])
+            
+
+
+            item['trigrams'] = cache['data'][keys['name']]['trigrams'][config['thumb-space']]
+
+        elif config['thumb-space'] == 'AVG':
+            # add thumb type
+            if not 'LT' in cache['data'][keys['name']]['trigrams']:
+                cache['data'][keys['name']]['trigrams']['LT'] = analyzer.count_trigrams(keys, data, 'LT')
+            if not 'RT' in cache['data'][keys['name']]['trigrams']:
+                cache['data'][keys['name']]['trigrams']['RT'] = analyzer.count_trigrams(keys, data, 'RT')
+
+            for stat in cache['data'][keys['name']]['trigrams']['LT']:
+                item['trigrams'][stat] = (
+                    0.5 * cache['data'][keys['name']]['trigrams']['LT'][stat] +
+                    0.5 * cache['data'][keys['name']]['trigrams']['RT'][stat]
+                )
+
+        # finger-use
+        if not 'finger-use' in cache['data'][keys['name']]:
+            cache['data'][keys['name']]['finger-use'] = analyzer.count_finger_use(keys, data)
+
+        item['finger-use'] = cache['data'][keys['name']]['finger-use']
+    
+        results['data'].append(item)
+        
     sort_results(results, config)
+
+    with open(cachefile, 'w') as f:
+        f.write(json.dumps(cache, indent=4)) 
+
     return results
 
 
@@ -84,6 +146,7 @@ def sort_results(results: JSON, config: JSON):
         results['data'] = sorted(results['data'], key=lambda x : x['name'].lower(), reverse=config['sort-high'])
     else:
         results['data'] = sorted(results['data'], key=lambda x : x['sort'], reverse=config['sort-high'])
+
 
 def show_results(results: JSON, config: JSON):
 
