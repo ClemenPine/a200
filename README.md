@@ -29,4 +29,4 @@ set the config to its default factory state
 
 ## Demo
 
-a short ![demo](https://youtu.be/eeS1HR6MgEE) of the command usage
+a short [demo](https://youtu.be/eeS1HR6MgEE) of the command usage
