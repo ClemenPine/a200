@@ -25,4 +25,8 @@ set the data to use in the analysis
 set the color theme
 
 #### reset
-set the config to it's default factory state
+set the config to its default factory state
+
+## Demo
+
+a short ![demo](https://youtu.be/eeS1HR6MgEE) of the command usage
