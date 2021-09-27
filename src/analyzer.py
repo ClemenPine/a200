@@ -5,50 +5,78 @@ JSON = Dict[str, any]
 
 
 def get_table():
-    fingers = ['LP', 'LR', 'LM', 'LI', 'LT', 'RT', 'RI', 'RM', 'RR', 'RP']
-    sequences = [item for item in itertools.product(fingers, repeat=3)]
+
+    fingers = {
+        'LP': 0,
+        'LR': 1,
+        'LM': 2,
+        'LI': 3,
+        'LT': 4,
+        'RT': 5,
+        'RI': 6,
+        'RM': 7,
+        'RR': 8,
+        'RP': 9,
+    }
+    sequences = [item for item in itertools.product(fingers.keys(), repeat=3)]
     
-
     table = {}
-    for sequence in sequences:
-        trigram_type = ''
+    for seq in sequences:
+        
+        # trigrams
+        if (
+            seq[0][0] == seq[2][0] and
+            seq[0][0] != seq[1][0]
+        ):
+            trigram_type = 'alternate'
 
-        if sequence[0][0] == sequence[2][0]:
-            if sequence[0][0] == sequence[1][0]:
-                if (
-                    (
-                        fingers.index(sequence[0]) <
-                        fingers.index(sequence[1]) <
-                        fingers.index(sequence[2])
-                    ) or
-                    (
-                        fingers.index(sequence[0]) >
-                        fingers.index(sequence[1]) >
-                        fingers.index(sequence[2])
-                    )
-                ):
-                    trigram_type = "onehand"
-                else:
-                    trigram_type = "redirect"
-            else:
-                trigram_type = "alternate"
+        elif (
+            seq[0][0] != seq[2][0]
+        ):
+            trigram_type = 'roll'
+
+        elif (
+            (
+                fingers[seq[0]] < 
+                fingers[seq[1]] <
+                fingers[seq[2]]
+            ) or
+            (
+                fingers[seq[0]] >
+                fingers[seq[1]] >
+                fingers[seq[2]]
+            )
+        ):
+            trigram_type = 'onehand'
+
         else:
-            trigram_type = "roll"
+            trigram_type = 'redirect'
 
-        if sequence[0] == sequence[1] or sequence[1] == sequence[2]:
-            trigram_type = "sfb"
-        if sequence[0] == sequence[2]:
-            if sequence[0] == sequence[1]:
-                trigram_type = 'sfT'
-            else:
-                trigram_type = 'dsfb'
+        # sfs 
+        if (
+            seq[0] != seq[2] and
+            seq[1] in [seq[0], seq[2]]
+        ):
+            trigram_type = 'sfb'
 
-        table['-'.join(sequence)] = trigram_type
+        elif (
+            seq[0] == seq[2] and
+            seq[0] != seq[1]
+        ):
+            trigram_type = 'dsfb'
+        
+        elif (
+            seq[0] == seq[1] and
+            seq[1] == seq[2]
+        ):
+            trigram_type = 'sfT'
+        
+        table['-'.join(seq)] = trigram_type
     
     return dict(sorted(table.items(), key=lambda x:x[1], reverse=True))
     
 
-def count_finger_use(keys: JSON, data: JSON, config: JSON):
+def count_finger_use(keys: JSON, data: JSON):
 
     counts = {
         'LP': 0,
@@ -68,86 +96,74 @@ def count_finger_use(keys: JSON, data: JSON, config: JSON):
         else:
             counts[keys['keys'][char]['finger']] += data['1-grams'][char]
 
+    total = sum(counts.values())
     for finger in counts:
-        counts[finger] /= sum(data['1-grams'].values())
+        counts[finger] /= total
 
     return counts  
 
 
-def count_trigrams(keys: JSON, data: JSON, config: JSON):
+def count_trigrams(keys: JSON, data: JSON, thumb: str):
 
     table = get_table()
 
     trigram_data = {
-        'LT': {
-            'roll': 0,
-            'alternate': 0,
-            'redirect': 0,
-            'onehand': 0,
-            'sfb': 0,
-            'dsfb': 0,
-            'sfT': 0,
-            'sfR': 0,
-        },
-        'RT': {
-            'roll': 0,
-            'alternate': 0,
-            'redirect': 0,
-            'onehand': 0,
-            'sfb': 0,
-            'dsfb': 0,
-            'sfT': 0,
-            'sfR': 0,
-        }
+        'roll': 0,
+        'alternate': 0,
+        'redirect': 0,
+        'onehand': 0,
+        'sfb': 0,
+        'dsfb': 0,
+        'sfT': 0,
+        'sfR': 0,
+    }
+
+    for trigram in data['3-grams']:
+        
+        fingers = []
+        for char in trigram:
+            if char == ' ':
+                fingers.append(thumb)
+            else:
+                fingers.append(keys['keys'][char]['finger'])
+        
+        key = '-'.join(fingers)
+        if key in table:
+            if (
+                trigram[0] == trigram[1] or
+                trigram[1] == trigram[2] or
+                trigram[0] == trigram[2]
+            ):
+                trigram_data['sfR'] += data['3-grams'][trigram]
+            else:
+                trigram_data[table[key]] += data['3-grams'][trigram]
+
+    total = sum(trigram_data.values())
+    for stat in trigram_data:
+        trigram_data[stat] /= total
+
+    return trigram_data
+
+
+def get_results(keys: JSON, data: JSON, config: JSON):
+    
+    results = {
+        'name': keys['name'],
+        'sort': 0,
+        'trigrams': {},
+        'finger-use': count_finger_use(keys, data)
     }
 
     if config['thumb-space'] == 'LT':
-        trigram_data.pop('RT')
+        results['trigrams'] = count_trigrams(keys, data, 'LT')
     elif config['thumb-space'] == 'RT':
-        trigram_data.pop('LT')
+        results['trigrams'] = count_trigrams(keys, data, 'RT')
     elif config['thumb-space'] == 'NONE':
-        trigram_data.pop('RT')
-
-    for trigram in data['3-grams']:
-
-        if config['thumb-space'] == 'NONE' and ' ' in trigram:
-            continue
-
-        fingers = []
-        for thumb in trigram_data:
-            key = []
-            for char in trigram:
-                if char == ' ':
-                    key.append(thumb)
-                else:
-                    key.append(keys['keys'][char]['finger'])
-            fingers.append(key)
-
-            key = '-'.join(key)
-
-            if key in table:
-                if (
-                    trigram[0] == trigram[1] or
-                    trigram[1] == trigram[2] or
-                    trigram[0] == trigram[2]
-                ):
-                    trigram_data[thumb]['sfR'] += data['3-grams'][trigram]
-                else:
-                    trigram_data[thumb][table[key]] += data['3-grams'][trigram]
-
-
-    for thumb in trigram_data:
-        for stat in trigram_data[thumb]:
-            trigram_data[thumb][stat] /= sum(data['3-grams'].values())
-        
-    if config['thumb-space'] == 'LT':
-        return trigram_data['LT']
-    elif config['thumb-space'] == 'RT':
-        return trigram_data['RT']
+        results['trigrams'] = count_trigrams(keys, data, 'NONE')
     elif config['thumb-space'] == 'AVG':
-        data = {}
-        for stat in trigram_data['LT']:
-            data[stat] = (trigram_data['LT'][stat] + trigram_data['RT'][stat]) / 2
-        return data
-    else:
-        return trigram_data['LT']
+        left_trigrams = count_trigrams(keys, data, 'LT')
+        right_trigrams = count_trigrams(keys, data, 'RT')
+        for stat in left_trigrams:
+            results['trigrams'][stat] = (left_trigrams[stat] + right_trigrams[stat]) / 2
+
+    return results

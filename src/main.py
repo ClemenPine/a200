@@ -59,16 +59,7 @@ def get_results(config: JSON):
     }
 
     for keys in layouts:
-        trigram_counts = analyzer.count_trigrams(keys, data, config)
-        finger_use = analyzer.count_finger_use(keys, data, config)
-        results['data'].append(
-            {
-                'name': keys['name'],
-                'trigrams': trigram_counts,
-                'finger-use': finger_use,
-                'sort': 0
-            }
-        )
+        results['data'].append(analyzer.get_results(keys, data, config))
 
     sort_results(results, config)
     return results
