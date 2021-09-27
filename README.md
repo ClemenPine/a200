@@ -1,5 +1,7 @@
 # 200-analyzer
 
+![analyzer](https://i.ibb.co/hVkBDZd/Screenshot-from-2021-09-27-18-17-43.png)
+
 ### Commands
 
 `Usage: ./a200 [command] [args]`
