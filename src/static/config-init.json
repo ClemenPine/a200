@@ -3,9 +3,9 @@
     "datadir": "data",
     "cachedir": "cache",
     "themedir": "themes",
-    "theme": "festive",
-    "datafile": "monkeytype-200",
-    "thumb-space": "LT",
+    "theme": "sunset",
+    "datafile": "monkeytype-quotes",
+    "thumb-space": "AVG",
     "sort": {},
     "sort-high": true,
     "columns": {
