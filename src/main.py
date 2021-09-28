@@ -323,8 +323,19 @@ def parse_args(name='', action=None, *args):
 
     elif action in ['help', 'hp', 'h', '?']:
         
-        # TODO
-        print("This is a help page")
+        args_help = json.load(open('src/static/args-help.json', 'r'))
+        print(args_help['desc'])
+        for item in args_help['actions']:
+            item_args = ' | '.join([x for x in item['args']])
+
+            print(
+                '   ',
+                (item['name'] + ' | ' + item['alias']).ljust(24, ' '),
+                item_args.ljust(24, ' '),
+                item['desc'],
+            )
+            print()
+
         exit()
 
     return config
