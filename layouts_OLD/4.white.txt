@@ -1,7 +1,0 @@
-White
-v  y  d  ,; '  &  j  m  l  u
-a  t  h  e  b  -+ c  s  n  o  i
-p  k  g  w  q  x  r  f  .: z
-0 1 2 3 3 3 4 4 5 6
-0 1 2 3 3 4 4 4 5 6 7
-1 2 3 3 3 4 4 4 5 6

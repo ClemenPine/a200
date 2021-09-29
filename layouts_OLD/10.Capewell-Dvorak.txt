@@ -1,7 +1,0 @@
-Capewell-Dvorak
-'  ,  .  p  y  q  f  g  r  k 
-o  a  e  i  u  d  h  t  n  s
-z  x  c  v  j  l  m  w  b  ;
-0 1 2 3 3 4 4 5 6 7 
-0 1 2 3 3 4 4 5 6 7
-0 1 2 3 3 4 4 5 6 7 
