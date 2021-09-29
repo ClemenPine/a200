@@ -1,0 +1,47 @@
+{
+    "desc": "Usage: ./a200 [command] [args]",
+    "actions": [
+        {
+            "name": "toggle column",
+            "alias": "tc",
+            "args": ["column(s)", "all"],
+            "desc": "change the visibility of some column(s)"
+        },
+        {
+            "name": "toggle layout",
+            "alias": "tl",
+            "args": ["layouts(s)", "all"],
+            "desc": "change the visibility of some layout(s)"
+        },
+        {
+            "name": "sort",
+            "alias": "st",
+            "args": ["parameter(s)"],
+            "desc": "order the results based on the parameters"
+        },
+        {
+            "name": "thumb",
+            "alias": "tb",
+            "args": ["LT", "RT", "NONE", "AVG"],
+            "desc": "set which thumb presses space"
+        },
+        {
+            "name": "data",
+            "alias": "dt",
+            "args": ["dataname"],
+            "desc": "set the data to use for the analysis"
+        },
+        {
+            "name": "theme",
+            "alias": "tm",
+            "args": ["themename"],
+            "desc": "set the color scheme"
+        },
+        {
+            "name": "reset",
+            "alias": "",
+            "args": [],
+            "desc": "reset the config to its factory defaults"
+        }
+    ]
+}
