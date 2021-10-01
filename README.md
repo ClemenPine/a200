@@ -6,25 +6,25 @@
 
 `Usage: ./a200 [command] [args]`
 
-#### tc | toggle column
+#### tc | toggle column [column]
 change the visibility of column(s) or set(s) of columns. Use `all` to toggle all columns
 
-#### tl | toggle layout
+#### tl | toggle layout [layout]
 change the visibility of layout(s)
 
-#### st | sort
+#### st | sort [parameter]
 order the results based on sort parameters. Parameters can be specified as either `(-)parameter` or `(-)x%parameter`, where a negative denotes sorting from low to high instead of high to low, and x denotes the percent weight of a given metric. If the weight of some parameters are unspecified, the weight will be divided equally among them
 
-#### tb | thumb
+#### tb | thumb [LT, RT, NONE, AVG]
 change which type of thumb to press space with. `LT` and `RT` represent the left and right thumb, respectively. `NONE` will throw away all trigram data with space. `AVG` will take the average of the metrics from left and right. 
 
-#### dt | data
-set the data to use in the analysis
+#### dt | data [data]
+set the data to use in the analysis. [data] is the name of a file in the data/ directory.
 
-#### tm | theme
-set the color theme
+#### tm | theme [theme]
+set the color theme. [theme] is the name of a file in the themes/ directory.
 
-#### reset
+#### reset []
 set the config to its default factory state
 
 ## Demo
