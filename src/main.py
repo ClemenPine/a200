@@ -83,8 +83,12 @@ def get_results(config: JSON):
         }
 
         # add key
-        if not keys['name'] in cache['data']:
+        if (
+            not keys['name'] in cache['data'] or
+            keys['hash'] != cache['data'][keys['name']]['hash']
+        ):
             cache['data'][keys['name']] = {
+                'hash': keys['hash'],
                 'trigrams': {}
             }
 

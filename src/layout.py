@@ -1,5 +1,5 @@
 import json
-import random
+import hashlib
 import glob
 from typing import Dict
 
@@ -24,6 +24,9 @@ def load_file(filename: str):
                 keys['name'] = ' '.join(line.split())
             else:
                 tokens.append(line.split())
+
+    hashstr = '-'.join([val for sublist in tokens for val in sublist])
+    keys['hash'] = hashlib.md5(hashstr.encode()).hexdigest()
 
     chars = tokens[:len(tokens) // 2]
     indexes = tokens[len(tokens) // 2:]
