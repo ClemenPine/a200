@@ -148,10 +148,8 @@ def count_trigrams(keys: JSON, data: JSON, thumb: str):
 def get_results(keys: JSON, data: JSON, config: JSON):
     
     results = {
-        'name': keys['name'],
-        'sort': 0,
         'trigrams': {},
-        'finger-use': count_finger_use(keys, data)
+        'finger-use': count_finger_use(keys, data),
     }
 
     if config['thumb-space'] == 'LT':
@@ -166,4 +164,4 @@ def get_results(keys: JSON, data: JSON, config: JSON):
         for stat in left_trigrams:
             results['trigrams'][stat] = (left_trigrams[stat] + right_trigrams[stat]) / 2
 
-    return results
+    return {k: v for d in results for k, v in results[d].items()}
