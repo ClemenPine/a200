@@ -18,21 +18,22 @@ def init_config():
     return config
 
 
-def get_layout_percent(item: JSON, section: str, column_name: str, data: JSON):
-    percent = 0
-    for result in data['data']:
-        if item[section][column_name] > result[section][column_name]:
-            percent += 1
-    return percent / len(data['data'])
+def get_layout_percent(item: JSON, metric: str, results: JSON):
+
+    wins = 0
+    for result in results['data']:
+        if item['metrics'][metric] > result['metrics'][metric]:
+            wins += 1
+    return wins / len(results['data'])
 
 
-def print_color(item: JSON, section: str, column_name: str, data: JSON):
+def print_color(item: JSON, metric: str, data: JSON):
 
     # get percentage of layouts worse
-    percent = get_layout_percent(item, section, column_name, data)
+    percent = get_layout_percent(item, metric, data)
 
     # get string
-    string = "{:.2%}".format(item[section][column_name]).rjust(6, ' ') + '  '
+    string = "{:.2%}".format(item['metrics'][metric]).rjust(6, ' ') + '  '
 
     # color printing based on percentage
     colors = json.load(open(os.path.join(config['themedir'], config['theme'] + '.json'), 'r'))['colors']
@@ -59,8 +60,7 @@ def get_results(config: JSON):
 
     if os.path.isfile(cachefile):
         cache = json.load(open(cachefile, 'r'))
-    else:
-        
+    else:   
         cache = {
             'file': config['datafile'],
             'data': {}
@@ -78,11 +78,10 @@ def get_results(config: JSON):
         item = {
             'name': keys['name'],
             'sort': 0,
-            'trigrams': {},
-            'finger-use': {},
+            'metrics': {},
         }
 
-        # add key
+        # add key if it doesn't exist or contains a hash mismatch
         if (
             not keys['name'] in cache['data'] or
             keys['hash'] != cache['data'][keys['name']]['hash']
@@ -92,39 +91,17 @@ def get_results(config: JSON):
                 'trigrams': {}
             }
 
-        # trigrams
-        if config['thumb-space'] in ['LT', 'RT', 'NONE']:
-            # add thumb type
-            if not config['thumb-space'] in cache['data'][keys['name']]['trigrams']:
-                cache['data'][keys['name']]['trigrams'][config['thumb-space']] = analyzer.count_trigrams(keys, data, config['thumb-space'])
-            
+        # get stats
+        if not config['thumb-space'] in cache['data'][item['name']]:
+            cache['data'][item['name']][config['thumb-space']] = analyzer.get_results(keys, data, config)
 
-
-            item['trigrams'] = cache['data'][keys['name']]['trigrams'][config['thumb-space']]
-
-        elif config['thumb-space'] == 'AVG':
-            # add thumb type
-            if not 'LT' in cache['data'][keys['name']]['trigrams']:
-                cache['data'][keys['name']]['trigrams']['LT'] = analyzer.count_trigrams(keys, data, 'LT')
-            if not 'RT' in cache['data'][keys['name']]['trigrams']:
-                cache['data'][keys['name']]['trigrams']['RT'] = analyzer.count_trigrams(keys, data, 'RT')
-
-            for stat in cache['data'][keys['name']]['trigrams']['LT']:
-                item['trigrams'][stat] = (
-                    0.5 * cache['data'][keys['name']]['trigrams']['LT'][stat] +
-                    0.5 * cache['data'][keys['name']]['trigrams']['RT'][stat]
-                )
-
-        # finger-use
-        if not 'finger-use' in cache['data'][keys['name']]:
-            cache['data'][keys['name']]['finger-use'] = analyzer.count_finger_use(keys, data)
-
-        item['finger-use'] = cache['data'][keys['name']]['finger-use']
+        item['metrics'] = cache['data'][item['name']][config['thumb-space']]
     
         results['data'].append(item)
         
     sort_results(results, config)
 
+    # write cache
     with open(cachefile, 'w') as f:
         f.write(json.dumps(cache, indent=4)) 
 
@@ -136,8 +113,7 @@ def sort_results(results: JSON, config: JSON):
     # calulate sort criteria
     for item in results['data']:
         for sort in config['sort']:
-            section = [item for item in config['columns'] if sort in config['columns'][item]][0]
-            percent = get_layout_percent(item, section, sort, results)
+            percent = get_layout_percent(item, sort, results)
             if str(config['sort'][sort])[0] == '-':
                 value = 1 - percent
             else:
@@ -170,10 +146,9 @@ def show_results(results: JSON, config: JSON):
 
 
     # print column names
-    for section in config['columns']:
-        for column_name in config['columns'][section]:
-            if config['columns'][section][column_name]:
-                print(column_name.rjust(8, ' '), end=' ')
+    for metric, value in flatten(config['columns']).items():
+        if value:
+            print(metric.rjust(8, ' '), end=' ')
     print()
 
     # print rows
@@ -185,11 +160,22 @@ def show_results(results: JSON, config: JSON):
 
         # print layout stats
         print((item['name'] + '\033[38;5;250m' + ' ').ljust(36, '-') + '\033[0m', end=' ')
-        for section in config['columns']:
-            for column_name in config['columns'][section]:
-                if config['columns'][section][column_name]:
-                    print_color(item, section, column_name, results)
+        for metric, value in flatten(config['columns']).items():
+            if value:
+                print_color(item, metric, results)
         print()
+
+
+def flatten(section: JSON):
+
+    res = {}
+    for item in section:
+        if type(section[item]) == bool:
+            res[item] = section[item]
+        else:
+            res.update(flatten(section[item]))
+
+    return res
         
 
 def get_states(section: JSON):
