@@ -9,7 +9,10 @@ JSON = Dict[str, any]
 
 def init_config():
     
-    config = json.load(open(os.path.join('src', 'static', 'config-init.json'), 'r'))
+    if os.path.isfile('init-config.json'):
+        config = json.load(open('init-config.json', 'r'))
+    else:
+        config = json.load(open(os.path.join('src', 'static', 'config-init.json'), 'r'))
     layouts = layout.load_dir(config['layoutdir'])
 
     for keys in layouts:
