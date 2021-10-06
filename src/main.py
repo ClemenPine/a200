@@ -87,8 +87,7 @@ def get_results(config: JSON):
             keys['hash'] != cache['data'][keys['name']]['hash']
         ):
             cache['data'][keys['name']] = {
-                'hash': keys['hash'],
-                'trigrams': {}
+                'hash': keys['hash']
             }
 
         # get stats
