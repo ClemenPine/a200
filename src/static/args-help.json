@@ -38,6 +38,18 @@
             "desc": "set the color scheme"
         },
         {
+            "name": "config save",
+            "alias": "cs",
+            "args": ["name"],
+            "desc": "save the current config"
+        },
+        {
+            "name": "config load",
+            "alias": "cl",
+            "args": ["configfile"],
+            "desc": "load a config from file"
+        },
+        {
             "name": "reset",
             "alias": "",
             "args": [],
