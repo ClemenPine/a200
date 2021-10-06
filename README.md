@@ -15,6 +15,9 @@ change the visibility of layout(s)
 #### st | sort [parameter]
 order the results based on sort parameters. Parameters can be specified as either `(-)parameter` or `(-)x%parameter`, where a negative denotes sorting from low to high instead of high to low, and x denotes the percent weight of a given metric. If the weight of some parameters are unspecified, the weight will be divided equally among them
 
+#### fl | filter [metric] [cutoff]
+filter the results based on a `metric`, with a certain `cutoff`. Use `-metric` to get layouts below the cutoff, and `metric` to get layouts above the cutoff
+
 #### tb | thumb [LT, RT, NONE, AVG]
 change which type of thumb to press space with. `LT` and `RT` represent the left and right thumb, respectively. `NONE` will throw away all trigram data with space. `AVG` will take the average of the metrics from left and right. 
 

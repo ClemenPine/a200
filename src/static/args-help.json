@@ -20,6 +20,12 @@
             "desc": "order the results based on the parameters"
         },
         {
+            "name": "filter",
+            "alias": "fl",
+            "args": ["metric", "cutoff"],
+            "desc": "filter the results based in the parameters"
+        },
+        {
             "name": "thumb",
             "alias": "tb",
             "args": ["LT", "RT", "NONE", "AVG"],
