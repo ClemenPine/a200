@@ -135,6 +135,13 @@ def show_results(results: JSON, config: JSON):
 
     # print metadata
     print(results['file'].upper())
+
+    if 'metric' in config['filter']:
+        print("filter by:", end='   ')
+        print(
+            config['filter']['metric'],
+            "{:.0%}".format(config['filter']['cutoff']),
+        )
     print("sort by:", end='   ')
     for sort in config['sort']:
         print(
@@ -154,12 +161,32 @@ def show_results(results: JSON, config: JSON):
             print(metric.rjust(8, ' '), end=' ')
     print()
 
+    # get filter
+    if 'metric' in config['filter']:
+        cutoff = config['filter']['cutoff']
+        if str(config['filter']['metric'])[0] == '-':
+            dir = -1
+            filter = config['filter']['metric'][1:]
+        else:
+            dir = 1
+            filter = config['filter']['metric']
+    else:
+        filter = 'roll'
+        cutoff = 0
+        dir = 1
+
     # print rows
     for item in results['data']:
 
         # ignore hidden layouts 
         if not config['layouts'][item['name'].lower()]:
             continue
+
+        # ignore filter layouts
+
+        if dir*(item['metrics'][filter] - cutoff) < 0:
+            continue
+
 
         # print layout stats
         print((item['name'] + '\033[38;5;250m' + ' ').ljust(36, '-') + '\033[0m', end=' ')
@@ -294,6 +321,16 @@ def parse_args(name='', action=None, *args):
             if config['sort'][item] in ['', '-']:
                 config['sort'][item] += str(percent_left)
             config['sort'][item] = float(config['sort'][item]) / 100
+
+    elif action in ['filter', 'fl']:
+
+        if args:
+            config['filter'] = {
+                'metric': args[0],
+                'cutoff': float(args[1]),
+            }
+        else:
+            config['filter'] = {}
 
     elif action in ['thumb', 'tb']:
         
