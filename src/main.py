@@ -1,6 +1,7 @@
 import sys
 import os
 import json
+import shutil
 import layout, analyzer
 from typing import Dict, List
 
@@ -342,6 +343,10 @@ def parse_args(name='', action=None, *args):
         elif command == 'load':
             if os.path.isfile(filename):
                 config = json.load(open(filename, 'r'))
+
+    elif action in ['cache', 'cc']:
+
+        shutil.rmtree(config['cachedir'])
 
     elif action in ['help', 'hp', 'h', '?']:
         

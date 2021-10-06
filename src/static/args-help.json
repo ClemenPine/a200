@@ -50,6 +50,12 @@
             "desc": "load a config from file"
         },
         {
+            "name": "cache clear",
+            "alias": "cc",
+            "args": [],
+            "desc": "clear the cache"
+        },
+        {
             "name": "reset",
             "alias": "",
             "args": [],
