@@ -7,16 +7,16 @@ JSON = Dict[str, any]
 def get_table():
 
     fingers = {
-        'LP': 0,
-        'LR': 1,
+        'LP': 4,
+        'LR': 3,
         'LM': 2,
-        'LI': 3,
-        'LT': 4,
-        'RT': 5,
-        'RI': 6,
-        'RM': 7,
-        'RR': 8,
-        'RP': 9,
+        'LI': 1,
+        'LT': 0,
+        'RT': 0,
+        'RI': 1,
+        'RM': 2,
+        'RR': 3,
+        'RP': 4,
     }
     sequences = [item for item in itertools.product(fingers.keys(), repeat=3)]
     
@@ -31,9 +31,32 @@ def get_table():
             trigram_type = 'alternate'
 
         elif (
-            seq[0][0] != seq[2][0]
+            (
+                seq[0][0] != seq[2][0] and
+                seq[0][0] == seq[1][0] and
+                fingers[seq[0]] < fingers[seq[1]]
+            ) or
+            (
+                seq[0][0] != seq[2][0] and
+                seq[1][0] == seq[2][0] and
+                fingers[seq[1]] < fingers[seq[2]]
+            )
         ):
-            trigram_type = 'roll'
+            trigram_type = 'roll-out'
+
+        elif (
+            (
+                seq[0][0] != seq[2][0] and
+                seq[0][0] == seq[1][0] and
+                fingers[seq[0]] > fingers[seq[1]]
+            ) or
+            (
+                seq[0][0] != seq[2][0] and
+                seq[1][0] == seq[2][0] and
+                fingers[seq[1]] > fingers[seq[2]]
+            )
+        ):
+            trigram_type = 'roll-in'
 
         elif (
             (
@@ -108,7 +131,8 @@ def count_trigrams(keys: JSON, data: JSON, thumb: str):
     table = get_table()
 
     trigram_data = {
-        'roll': 0,
+        'roll-in': 0,
+        'roll-out': 0,
         'alternate': 0,
         'redirect': 0,
         'onehand': 0,
@@ -136,12 +160,16 @@ def count_trigrams(keys: JSON, data: JSON, thumb: str):
             ):
                 trigram_data['sfR'] += data['3-grams'][trigram]
             else:
+                # if table[key] in ['roll-in', 'roll-out']:
+                #     trigram_data['roll'] += data['3-grams'][trigram]  
+
                 trigram_data[table[key]] += data['3-grams'][trigram]
 
     total = sum(trigram_data.values())
     for stat in trigram_data:
         trigram_data[stat] /= total
 
+    trigram_data['roll'] = trigram_data['roll-in'] + trigram_data['roll-out']
     return trigram_data
 
 

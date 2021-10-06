@@ -12,6 +12,8 @@
         "trigrams": {
             "alternate": true,
             "roll": true,
+            "roll-in": true,
+            "roll-out": true,
             "redirect": true,
             "onehand": true,
             "sfb": true,

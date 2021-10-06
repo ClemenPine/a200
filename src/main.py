@@ -272,7 +272,7 @@ def parse_args(name='', action=None, *args):
             # parse metric string
             else:
                 if not '%' in arg:
-                    if '-' in arg:
+                    if arg[0] == '-':
                         arg = ('-', arg[1:])
                     else:
                         arg = ('', arg)
