@@ -59,18 +59,19 @@ def get_table():
             trigram_type = 'roll-in'
 
         elif (
-            (
-                fingers[seq[0]] < 
-                fingers[seq[1]] <
-                fingers[seq[2]]
-            ) or
-            (
-                fingers[seq[0]] >
-                fingers[seq[1]] >
-                fingers[seq[2]]
-            )
+            fingers[seq[0]] >
+            fingers[seq[1]] >
+            fingers[seq[2]]
         ):
-            trigram_type = 'onehand'
+            trigram_type = 'oneh-in'
+
+        elif (
+            
+            fingers[seq[0]] < 
+            fingers[seq[1]] <
+            fingers[seq[2]]
+        ):
+            trigram_type = 'oneh-out'
 
         else:
             trigram_type = 'redirect'
@@ -135,7 +136,8 @@ def count_trigrams(keys: JSON, data: JSON, thumb: str):
         'roll-out': 0,
         'alternate': 0,
         'redirect': 0,
-        'onehand': 0,
+        'oneh-in': 0,
+        'oneh-out': 0,
         'sfb': 0,
         'dsfb': 0,
         'sfT': 0,
@@ -167,6 +169,7 @@ def count_trigrams(keys: JSON, data: JSON, thumb: str):
         trigram_data[stat] /= total
 
     trigram_data['roll'] = trigram_data['roll-in'] + trigram_data['roll-out']
+    trigram_data['onehand'] = trigram_data['oneh-in'] + trigram_data['oneh-out']
     return trigram_data
 
 
