@@ -24,6 +24,15 @@ set the data to use in the analysis. [data] is the name of a file in the data/ d
 #### tm | theme [theme]
 set the color theme. [theme] is the name of a file in the themes/ directory.
 
+#### cs | config save [filename]
+saves the current config settings to a file in the configs/ directory
+
+#### cl | config load [filename]
+loads a config file from the configs/ directory
+
+#### cc | cache clear []
+clears the data cache
+
 #### reset []
 set the config to its default factory state
 
