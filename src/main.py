@@ -9,7 +9,10 @@ JSON = Dict[str, any]
 
 def init_config():
     
-    config = json.load(open(os.path.join('src', 'static', 'config-init.json'), 'r'))
+    if os.path.isfile('init-config.json'):
+        config = json.load(open('init-config.json', 'r'))
+    else:
+        config = json.load(open(os.path.join('src', 'static', 'config-init.json'), 'r'))
     layouts = layout.load_dir(config['layoutdir'])
 
     for keys in layouts:
@@ -310,6 +313,36 @@ def parse_args(name='', action=None, *args):
     elif action in ['reset']:
         
         config = init_config()
+
+    elif action in ['config', 'cs', 'cl']:
+
+        if action in ['config', 'cg']:
+            if args[0] in ['save', 's']:
+                command = 'save'
+                filename = args[1]
+            elif args[0] in ['load', 'l']:
+                command = 'load'
+                filename = args[1]
+
+        elif action == 'cs':
+            command = 'save'
+            filename = args[0]
+        elif action == 'cl':
+            command = 'load'
+            filename = args[0]
+
+
+        filename = os.path.join(config['configdir'], filename + '.json')
+        if command == 'save':
+
+            if not os.path.isdir(config['configdir']):
+                os.mkdir(config['configdir'])
+
+            with open(filename, 'w') as f:
+                f.write(json.dumps(config, indent=4))
+        elif command == 'load':
+            if os.path.isfile(filename):
+                config = json.load(open(filename, 'r'))
 
     elif action in ['help', 'hp', 'h', '?']:
         
