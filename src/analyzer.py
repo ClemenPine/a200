@@ -160,9 +160,6 @@ def count_trigrams(keys: JSON, data: JSON, thumb: str):
             ):
                 trigram_data['sfR'] += data['3-grams'][trigram]
             else:
-                # if table[key] in ['roll-in', 'roll-out']:
-                #     trigram_data['roll'] += data['3-grams'][trigram]  
-
                 trigram_data[table[key]] += data['3-grams'][trigram]
 
     total = sum(trigram_data.values())
