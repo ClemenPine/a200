@@ -1,6 +1,7 @@
 import json
 import hashlib
 import glob
+import os
 from typing import Dict
 
 JSON = Dict[str, any]
@@ -80,8 +81,14 @@ def load_dir(dirname: str):
     return layouts
 
 
-def pretty_print(filename: str):
+def pretty_print(filename: str, config: JSON):
 
+    shifted = dict(zip(
+        "abcdefghijklmnopqrstuvwxyz,./;'-=[]",
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZ<>?:\"_+{}"
+    ))
+
+    # get tokens
     keys = {}
     with open(filename, 'r') as f:
         tokens = []
@@ -90,11 +97,36 @@ def pretty_print(filename: str):
                 keys['name'] = ' '.join(line.split())
             else:
                 tokens.append(line.split())
+    
+    # theme
+    themepath = os.path.join(config['themedir'], config['theme'] + '.json')
+    colors = json.load(open(themepath, 'r'))['colors']
 
+    # 1 gram data
+    datapath = os.path.join(config['datadir'], config['datafile'] + '.json')
+    data = json.load(open(datapath, 'r'))['1-grams']
+
+    data[' '] = 0
+    data_total = sum(data.values())
+
+    # print characters
     chars = tokens[:len(tokens) // 2]
     for row in chars:
         for i, key in enumerate(row):
-            print(key, end=' ')
+            percent = 0
+            if key in data:
+                percent += data[key]
+            if shifted[key] in data:
+                percent += data[shifted[key]]
+            percent /= data_total
+
+            if percent > .05:
+                print('\033[38;5;' + colors['highest'] + 'm' + key + '\033[0m', end=' ')
+            elif percent > .02:
+                print('\033[38;5;' + colors['high'] + 'm' + key + '\033[0m', end=' ')
+            else:
+                print('\033[38;5;' + colors['base'] + 'm' + key + '\033[0m', end=' ')
+
             if i == len(row) // 2 - 1:
                 print('', end=' ')
         print()

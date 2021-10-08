@@ -209,7 +209,7 @@ def print_layout(results: JSON, config: JSON):
 
         # header
         print(item['name'])
-        layout.pretty_print(item['file'])
+        layout.pretty_print(item['file'], config)
         print()
 
         print('Trigrams')
