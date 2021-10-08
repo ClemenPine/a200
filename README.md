@@ -6,6 +6,9 @@
 
 `Usage: ./a200 [command] [args]`
 
+#### vw | view [layout(s)]
+get a detailed view of a layout's metrics
+
 #### tc | toggle column [column]
 change the visibility of column(s) or set(s) of columns. Use `all` to toggle all columns
 

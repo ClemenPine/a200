@@ -6,6 +6,10 @@
     "theme": "sunset",
     "datafile": "monkeytype-quotes",
     "thumb-space": "AVG",
+    "single-mode": {
+        "active": false,
+        "layouts": []
+    },
     "sort": {},
     "filter": {},
     "sort-high": true,

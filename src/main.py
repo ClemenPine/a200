@@ -2,6 +2,7 @@ import sys
 import os
 import json
 import shutil
+import copy
 import layout, analyzer
 from typing import Dict, List
 
@@ -31,7 +32,7 @@ def get_layout_percent(item: JSON, metric: str, results: JSON):
     return wins / len(results['data'])
 
 
-def print_color(item: JSON, metric: str, data: JSON):
+def print_color(item: JSON, metric: str, data: JSON, config: JSON):
 
     # get percentage of layouts worse
     percent = get_layout_percent(item, metric, data)
@@ -81,6 +82,7 @@ def get_results(config: JSON):
     for keys in layouts:
         item = {
             'name': keys['name'],
+            'file': keys['file'],
             'sort': 0,
             'metrics': {},
         }
@@ -192,8 +194,95 @@ def show_results(results: JSON, config: JSON):
         print((item['name'] + '\033[38;5;250m' + ' ').ljust(36, '-') + '\033[0m', end=' ')
         for metric, value in flatten(config['columns']).items():
             if value:
-                print_color(item, metric, results)
+                print_color(item, metric, results, config)
         print()
+
+
+def print_layout(results: JSON, config: JSON):
+
+    print(results['file'].upper())
+    print(("thumb: " + config['thumb-space']).ljust(22, ' '))
+
+    for item in [item for item in results['data'] if config['layouts'][item['name'].lower()] == True]:
+        
+        print()
+
+        # header
+        print(item['name'])
+        layout.pretty_print(item['file'])
+        print()
+
+        print('Trigrams')
+        print('========')
+
+        # alternation
+        print('Alternates -'.rjust(12, ' '), end=' ')
+        print('Total:', end=' ')
+        print_color(item, 'alternate', results, config)
+        print()
+
+        # rolls
+        print('Rolls -'.rjust(12, ' '), end=' ')
+        print('Total:', end=' ')
+        print_color(item, 'roll', results, config)
+        print('In:', end=' ')
+        print_color(item, 'roll-in', results, config),
+        print('Out:', end=' ')
+        print_color(item, 'roll-out', results, config)
+        print()
+
+        # onehands
+        print('Onehands -'.rjust(12, ' '), end=' ')
+        print('Total:', end=' ')
+        print_color(item, 'onehand', results, config)
+        print('In:', end=' ')
+        print_color(item, 'oneh-in', results, config),
+        print('Out:', end=' ')
+        print_color(item, 'oneh-out', results, config)
+        print()
+
+        # redirects
+        print('Redirects -'.rjust(12, ' '), end=' ')
+        print('Total:', end=' ')
+        print_color(item, 'redirect', results, config)
+        print()
+
+        print()
+
+        # sfb/dsfb/sfT/sfR
+        print('Bigrams')
+        print('=======')
+
+        print('SFB -'.rjust(12, ' '), end='')
+        print_color(item, 'sfb', results, config)
+        print('DSFB -'.rjust(12, ' '), end='')
+        print_color(item, 'dsfb', results, config)
+        print()
+
+        print('SFT -'.rjust(12, ' '), end='')
+        print_color(item, 'sfT', results, config)
+        print('SFR -'.rjust(12, ' '), end='')
+        print_color(item, 'sfR', results, config)
+        print()
+
+        print()
+
+        # finger use
+        print("Finger Use")
+        print("==========")
+
+        print('Left -'.rjust(12, ' '), end=' ')
+        for finger in ['LP','LR','LM','LI']:
+            print(finger + ':', end=' ')
+            print_color(item, finger, results, config)
+        print()
+
+        print('Right -'.rjust(12, ' '), end=' ')
+        for finger in ['RP','RR','RM','RI']:
+            print(finger + ':', end=' ')
+            print_color(item, finger, results, config)
+        print()
+
 
 
 def flatten(section: JSON):
@@ -253,7 +342,14 @@ def parse_args(name='', action=None, *args):
         config = init_config()
 
     # parse args
-    if action in ['toggle', 'tg', 'tc', 'tl']:
+    if action in ['view', 'vw']:
+
+        config['single-mode']['active'] = True
+        config['single-mode']['layouts'] = [x.lower() for x in args]
+
+    elif action in ['toggle', 'tg', 'tc', 'tl']:
+
+        config['single-mode']['active'] = False
 
         # parse target and axis
         if action in ['toggle', 'tg']:
@@ -284,6 +380,8 @@ def parse_args(name='', action=None, *args):
                     set_states(section[target], not True in get_states(section[target]))
 
     elif action in ['sort', 'st']:
+
+        config['single-mode']['active'] = False
 
         config['sort'] = {}
 
@@ -324,6 +422,8 @@ def parse_args(name='', action=None, *args):
 
     elif action in ['filter', 'fl']:
 
+        config['single-mode']['active'] = False
+
         if args:
             config['filter'] = {
                 'metric': args[0],
@@ -348,7 +448,7 @@ def parse_args(name='', action=None, *args):
             config['theme'] = args[0]
 
     elif action in ['reset']:
-        
+    
         config = init_config()
 
     elif action in ['config', 'cs', 'cl']:
@@ -387,6 +487,8 @@ def parse_args(name='', action=None, *args):
 
     elif action in ['help', 'hp', 'h', '?']:
         
+        config['single-mode']['active'] = False
+
         args_help = json.load(open('src/static/args-help.json', 'r'))
         print(args_help['desc'])
         for item in args_help['actions']:
@@ -402,6 +504,10 @@ def parse_args(name='', action=None, *args):
 
         exit()
 
+    elif action == None:
+
+        config['single-mode']['active'] = False
+
     return config
 
 
@@ -409,8 +515,18 @@ if __name__ == "__main__":
 
     config = parse_args(*sys.argv)
 
-    results = get_results(config)
-    show_results(results, config)
+    if config['single-mode']['active']:
+        layout_config = copy.deepcopy(config)
+        layout_config['layouts'] = {item: False for item in layout_config['layouts']}
+
+        for layout_name in layout_config['single-mode']['layouts']:
+            layout_config['layouts'][layout_name] = True
+    
+        results = get_results(layout_config)
+        print_layout(results, layout_config)
+    else:
+        results = get_results(config)
+        show_results(results, config)
 
     with open('config.json', 'w') as f:
         f.write(json.dumps(config, indent=4))

@@ -16,6 +16,7 @@ def load_file(filename: str):
     ))
 
     keys = json.load(open('src/static/TEMPLATE.json', 'r'))
+    keys['file'] = filename
 
     with open(filename, 'r') as f:
         tokens = []
@@ -79,5 +80,22 @@ def load_dir(dirname: str):
     return layouts
 
 
-def pretty_print(keys: JSON):
-    pass
+def pretty_print(filename: str):
+
+    keys = {}
+    with open(filename, 'r') as f:
+        tokens = []
+        for i, line in enumerate(f.readlines()):
+            if i == 0:
+                keys['name'] = ' '.join(line.split())
+            else:
+                tokens.append(line.split())
+
+    chars = tokens[:len(tokens) // 2]
+    for row in chars:
+        for i, key in enumerate(row):
+            print(key, end=' ')
+            if i == len(row) // 2 - 1:
+                print('', end=' ')
+        print()
+    

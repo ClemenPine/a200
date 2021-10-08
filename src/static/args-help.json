@@ -2,6 +2,12 @@
     "desc": "Usage: ./a200 [command] [args]",
     "actions": [
         {
+            "name": "view",
+            "alias": "vw",
+            "args": ["layouts(s)"],
+            "desc": "get detailed data on a particular layout"
+        },
+        {
             "name": "toggle column",
             "alias": "tc",
             "args": ["column(s)", "all"],
