@@ -250,7 +250,7 @@ def print_layout(results: JSON, config: JSON):
         print()
 
         # sfb/dsfb/sfT/sfR
-        print('Bigrams')
+        print('Same Finger')
         print('=======')
 
         print('SFB -'.rjust(12, ' '), end='')
