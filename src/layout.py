@@ -121,11 +121,11 @@ def pretty_print(filename: str, config: JSON):
             percent /= data_total
 
             if percent > .05:
-                print('\033[38;5;' + colors['highest'] + 'm' + key + '\033[0m', end=' ')
+                print('\033[38;5;' + colors['highest'] + 'm' + key[0] + '\033[0m', end=' ')
             elif percent > .02:
-                print('\033[38;5;' + colors['high'] + 'm' + key + '\033[0m', end=' ')
+                print('\033[38;5;' + colors['high'] + 'm' + key[0] + '\033[0m', end=' ')
             else:
-                print('\033[38;5;' + colors['base'] + 'm' + key + '\033[0m', end=' ')
+                print('\033[38;5;' + colors['base'] + 'm' + key[0] + '\033[0m', end=' ')
 
             if i == len(row) // 2 - 1:
                 print('', end=' ')
