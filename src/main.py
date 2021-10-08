@@ -343,8 +343,7 @@ def parse_args(name='', action=None, *args):
 
     # parse args
     if action in ['view', 'vw']:
-
-        config['single-mode']['active'] = True
+        config['single-mode']['active'] = len(args) != 0
         config['single-mode']['layouts'] = [x.lower() for x in args]
 
     elif action in ['toggle', 'tg', 'tc', 'tl']:
