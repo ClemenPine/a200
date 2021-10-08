@@ -116,7 +116,7 @@ def pretty_print(filename: str, config: JSON):
             percent = 0
             if key in data:
                 percent += data[key]
-            if shifted[key] in data:
+            if key in shifted and shifted[key] in data:
                 percent += data[shifted[key]]
             percent /= data_total
 
