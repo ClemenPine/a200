@@ -100,7 +100,7 @@ def get_table():
     return dict(sorted(table.items(), key=lambda x:x[1], reverse=True))
     
 
-def count_finger_use(keys: JSON, data: JSON):
+def count_finger_use(keys: JSON, data: JSON, thumb: str):
 
     counts = {
         'LP': 0,
@@ -120,9 +120,15 @@ def count_finger_use(keys: JSON, data: JSON):
         else:
             counts[keys['keys'][char]['finger']] += data['1-grams'][char]
 
+    if thumb == 'NONE':
+        counts['TB'] = 0
+
     total = sum(counts.values())
     for finger in counts:
         counts[finger] /= total
+
+    counts['LTotal'] = sum({x: counts[x] for x in counts if x in ['LP', 'LR', 'LM', 'LI']}.values())
+    counts['RTotal'] = sum({x: counts[x] for x in counts if x in ['RP', 'RR', 'RM', 'RI']}.values())
 
     return counts  
 
@@ -177,7 +183,7 @@ def get_results(keys: JSON, data: JSON, config: JSON):
     
     results = {
         'trigrams': {},
-        'finger-use': count_finger_use(keys, data),
+        'finger-use': count_finger_use(keys, data, config['thumb-space']),
     }
 
     if config['thumb-space'] == 'LT':

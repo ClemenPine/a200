@@ -272,12 +272,16 @@ def print_layout(results: JSON, config: JSON):
         print("==========")
 
         print('Left -'.rjust(12, ' '), end=' ')
+        print('Total:', end=' ')
+        print_color(item, 'LTotal', results, config)
         for finger in ['LP','LR','LM','LI']:
             print(finger + ':', end=' ')
             print_color(item, finger, results, config)
         print()
 
         print('Right -'.rjust(12, ' '), end=' ')
+        print('Total:', end=' ')
+        print_color(item, 'RTotal', results, config)
         for finger in ['RP','RR','RM','RI']:
             print(finger + ':', end=' ')
             print_color(item, finger, results, config)

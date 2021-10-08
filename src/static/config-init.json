@@ -37,6 +37,8 @@
             "RM": false,
             "RR": false,
             "RP": false,
+            "LTotal": false,
+            "RTotal": false,
             "TB": false
         }
     },
