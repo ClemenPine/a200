@@ -259,7 +259,7 @@ def print_layout(results: JSON, config: JSON):
 
         # sfb/dsfb/sfT/sfR
         print('Same Finger')
-        print('=======')
+        print('===========')
 
         print('SFB -'.rjust(12, ' '), end='')
         print_color(item, 'sfb', results, config)
