@@ -287,6 +287,20 @@ def print_layout(results: JSON, config: JSON):
             print_color(item, finger, results, config)
         print()
 
+        print()
+
+        # row use
+        print("Row Use")
+        print("==========")
+
+        print('Top -'.rjust(12, ' '), end=' ')
+        print_color(item, 'top', results, config)
+        print('Home -'.rjust(12, ' '), end=' ')
+        print_color(item, 'home', results, config)
+        print('Bottom -'.rjust(12, ' '), end=' ')
+        print_color(item, 'bottom', results, config)
+        print()
+
 
 
 def flatten(section: JSON):

@@ -40,6 +40,11 @@
             "LTotal": false,
             "RTotal": false,
             "TB": false
+        },
+        "row-use": {
+            "top": false,
+            "home": false,
+            "bottom": false
         }
     },
     "layouts": {}

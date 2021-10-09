@@ -133,6 +133,26 @@ def count_finger_use(keys: JSON, data: JSON, thumb: str):
     return counts  
 
 
+def count_row_use(keys: JSON, data: JSON):
+    
+    counts = {
+        'top': 0,
+        'home': 0,
+        'bottom': 0,
+    }
+
+    for char in data['1-grams']:
+        if char in keys['keys'] and 'row' in keys['keys'][char]:
+            row = ['top', 'home', 'bottom'][keys['keys'][char]['row']]
+            counts[row] += data['1-grams'][char]
+    
+    total = sum(counts.values())
+    for finger in counts:
+        counts[finger] /= total
+
+    return counts
+
+
 def count_trigrams(keys: JSON, data: JSON, thumb: str):
 
     table = get_table()
@@ -184,6 +204,7 @@ def get_results(keys: JSON, data: JSON, config: JSON):
     results = {
         'trigrams': {},
         'finger-use': count_finger_use(keys, data, config['thumb-space']),
+        'row-use': count_row_use(keys, data),
     }
 
     if config['thumb-space'] == 'LT':
