@@ -32,13 +32,17 @@ def get_layout_percent(item: JSON, metric: str, results: JSON):
     return wins / len(results['data'])
 
 
-def print_color(item: JSON, metric: str, data: JSON, config: JSON):
+def print_color(item: JSON, metric: str, data: JSON, config: JSON, isPercent: bool=True):
 
     # get percentage of layouts worse
     percent = get_layout_percent(item, metric, data)
 
     # get string
-    string = "{:.2%}".format(item['metrics'][metric]).rjust(6, ' ') + '  '
+
+    if isPercent:
+        string = "{:.2%}".format(item['metrics'][metric]).rjust(6, ' ') + '  '
+    else:
+        string = "{0:.2f}".format(item['metrics'][metric]).rjust(6, ' ') + ' '
 
     # color printing based on percentage
     colors = json.load(open(os.path.join(config['themedir'], config['theme'] + '.json'), 'r'))['colors']
@@ -194,7 +198,7 @@ def show_results(results: JSON, config: JSON):
         print((item['name'] + '\033[38;5;250m' + ' ').ljust(36, '-') + '\033[0m', end=' ')
         for metric, value in flatten(config['columns']).items():
             if value:
-                print_color(item, metric, results, config)
+                print_color(item, metric, results, config, metric not in ['roll-rt', 'oneh-rt'])
         print()
 
 
@@ -229,6 +233,8 @@ def print_layout(results: JSON, config: JSON):
         print_color(item, 'roll-in', results, config),
         print('Out:', end=' ')
         print_color(item, 'roll-out', results, config)
+        print('Ratio:', end=' ')
+        print_color(item, 'roll-rt', results, config, False)
         print()
 
         # onehands
@@ -239,6 +245,8 @@ def print_layout(results: JSON, config: JSON):
         print_color(item, 'oneh-in', results, config),
         print('Out:', end=' ')
         print_color(item, 'oneh-out', results, config)
+        print('Ratio:', end=' ')
+        print_color(item, 'oneh-rt', results, config, False)
         print()
 
         # redirects
