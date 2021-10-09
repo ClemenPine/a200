@@ -287,6 +287,12 @@ def print_layout(results: JSON, config: JSON):
             print_color(item, finger, results, config)
         print()
 
+        if (config['thumb-space'] != 'NONE'):
+            print('Thumb -'.rjust(12, ' '), end=' ')
+            print('Total:', end=' ')
+            print_color(item, 'TB', results, config)
+            print()
+
         print()
 
         # row use
