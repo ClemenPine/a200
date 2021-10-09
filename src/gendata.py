@@ -1,56 +1,74 @@
 from typing import List
 import json
 
+def get_monograms(file: str):
 
-def get_texts(filename: str):
-    return json.load(open(filename, 'r'))['texts']
+    texts = json.load(open(file, 'r'))['texts']
 
-
-def get_bigrams(filename: str):
-    bigrams = {}
-    texts = get_texts(filename)
-    for text in texts:
-        for i in range(len(text) - 1):
-            pair = text[i:i+2]
-            if not pair in bigrams:
-                bigrams[pair] = 1
+    monograms = {' ': 0}
+    for word in texts:
+        for char in word:
+            if not char in monograms:
+                monograms[char] = 1
             else:
-                bigrams[pair] += 1
+                monograms[char] += 1
+        monograms[' '] += 1
+
+    return dict(sorted(monograms.items(), key=lambda x: x[1], reverse=True))
+   
+
+
+def get_trigrams(file: str):
     
-    return dict(sorted(bigrams.items(), key=lambda x:x[1], reverse=True))
+    texts = json.load(open(file, 'r'))['texts']
+    
+    trigrams = {}
+
+    counts = {
+        'start': {},
+        'end': {},
+    }
+
+    word_count = len(texts)
+    for word in texts:
+
+        padded_word = ' ' + word + ' '
+        for i in range(len(padded_word) - 2):
+            seq = padded_word[i:i+3]
+            if not seq in trigrams:
+                trigrams[seq] = word_count
+            else:
+                trigrams[seq] += word_count
+
+        if not word[0] in counts['start']:
+            counts['start'][word[0]] = 1
+        else:
+            counts['start'][word[0]] += 1
+
+        if not word[-1] in counts['end']:
+            counts['end'][word[-1]] = 1
+        else:
+            counts['end'][word[-1]] += 1
+
+    for start in counts['start']:
+        for end in counts['end']:
+            trigrams[end + ' ' + start] = counts['start'][start] * counts['end'][end]
+
+    return dict(sorted(trigrams.items(), key=lambda x: x[1], reverse=True))
 
 
-def get_ngrams(filename: str, n: int):
+if __name__ == '__main__':
 
-    ngrams = {}
-    texts = get_texts(filename)
+    file = 'monkeytype-450k'
 
-    for j, text in enumerate(texts):
+    results = {
+        'file': 'wordlists/' + file + '.json',
+        '1-grams': {},
+        '3-grams': {},
+    }
 
-        padded_words = pad_word(text, texts, n - 1)
-        for word in padded_words:
+    results['1-grams'] = get_monograms(results['file'])
+    results['3-grams'] = get_trigrams(results['file'])
 
-            for i in range(len(text)):
-
-                word_slice = word[i:i+n]
-                if not word_slice in ngrams:
-                    ngrams[word_slice] = 1
-                else:
-                    ngrams[word_slice] += 1
-        if j % (len(texts) // 10) == 0:
-            print(round(j / len(texts) * 100, -1), "% done", sep='')
-
-    return dict(sorted(ngrams.items(), key=lambda x:x[1], reverse=True))
-
-
-def pad_word(word: str, texts: List[str], n: int):
-
-    if n <= 0:
-        return [word]
-
-    ret = []
-    for text in texts:
-        new_word = word + " " + text
-        ret += pad_word(new_word, texts, n - len(" " + text))
-
-    return ret
+    with open(file + '.json', 'w') as f:
+        f.write(json.dumps(results, indent=4))
