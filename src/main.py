@@ -184,6 +184,9 @@ def show_results(results: JSON, config: JSON):
     # print rows
     for item in results['data']:
 
+        if item['name'].lower() not in config['layouts']:
+            config['layouts'][item['name'].lower()] = True
+
         # ignore hidden layouts 
         if not config['layouts'][item['name'].lower()]:
             continue
