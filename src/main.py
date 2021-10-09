@@ -305,7 +305,7 @@ def print_layout(results: JSON, config: JSON):
 
         # row use
         print("Row Use")
-        print("==========")
+        print("=======")
 
         print('Top -'.rjust(12, ' '), end=' ')
         print_color(item, 'top', results, config)
