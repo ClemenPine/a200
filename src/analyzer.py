@@ -197,8 +197,15 @@ def count_trigrams(keys: JSON, data: JSON, thumb: str):
     trigram_data['roll'] = trigram_data['roll-in'] + trigram_data['roll-out']
     trigram_data['onehand'] = trigram_data['oneh-in'] + trigram_data['oneh-out']
 
-    trigram_data['roll-rt'] = trigram_data['roll-in'] / trigram_data['roll-out']
-    trigram_data['oneh-rt'] = trigram_data['oneh-in'] / trigram_data['oneh-out']
+    if trigram_data['roll-out']:
+        trigram_data['roll-rt'] = trigram_data['roll-in'] / trigram_data['roll-out']
+    else:
+        trigram_data['roll-rt'] = float('inf')
+
+    if trigram_data['oneh-out']:
+        trigram_data['oneh-rt'] = trigram_data['oneh-in'] / trigram_data['oneh-out']
+    else:
+        trigram_data['oneh-rt'] = float('inf')
 
     return trigram_data
 
