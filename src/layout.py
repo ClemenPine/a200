@@ -9,7 +9,7 @@ JSON = Dict[str, any]
 
 def load_file(filename: str):
     
-    fingers = ['LP', 'LR', 'LM', 'LI', 'RI', 'RM', 'RR', 'RP']
+    fingers = ['LP', 'LR', 'LM', 'LI', 'RI', 'RM', 'RR', 'RP', 'LT', 'RT']
 
     shifted = dict(zip(
         "abcdefghijklmnopqrstuvwxyz,./;'-=[]",

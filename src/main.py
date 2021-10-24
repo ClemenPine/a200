@@ -158,8 +158,7 @@ def show_results(results: JSON, config: JSON):
     print()
 
     # print(("sort by " + config['sort'].upper() + ":").ljust(22, ' '), end=' ')
-    print(("thumb: " + config['thumb-space']).ljust(22, ' '), end=' ')
-
+    print(("space: " + config['thumb-space']).ljust(22, ' '), end=' ')
 
     # print column names
     for metric, value in flatten(config['columns']).items():
@@ -208,7 +207,7 @@ def show_results(results: JSON, config: JSON):
 def print_layout(results: JSON, config: JSON):
 
     print(results['file'].upper())
-    print(("thumb: " + config['thumb-space']).ljust(22, ' '))
+    print(("space: " + config['thumb-space']).ljust(22, ' '))
 
     for item in [item for item in results['data'] if config['layouts'][item['name'].lower()] == True]:
         
@@ -305,11 +304,13 @@ def print_layout(results: JSON, config: JSON):
             print_color(item, finger, results, config)
         print()
 
-        if (config['thumb-space'] != 'NONE'):
-            print('Thumb -'.rjust(12, ' '), end=' ')
-            print('Total:', end=' ')
-            print_color(item, 'TB', results, config)
-            print()
+        print('Thumbs -'.rjust(12, ' '), end=' ')
+        print('Total:', end=' ')
+        print_color(item, 'TTotal', results, config)            
+        for finger in ['LT','RT']:
+            print(finger + ':', end=' ')
+            print_color(item, finger, results, config)
+        print()
 
         print()
 
@@ -323,6 +324,8 @@ def print_layout(results: JSON, config: JSON):
         print_color(item, 'home', results, config)
         print('Bottom -'.rjust(12, ' '), end=' ')
         print_color(item, 'bottom', results, config)
+        print('Thumb -'.rjust(12, ' '), end=' ')
+        print_color(item, 'thumb', results, config)
         print()
 
 
@@ -473,9 +476,9 @@ def parse_args(name='', action=None, *args):
         else:
             config['filter'] = {}
 
-    elif action in ['thumb', 'tb']:
+    elif action in ['space', 'sp']:
         
-        if args[0].upper() in ['LT', 'RT', 'NONE', 'AVG']:
+        if args[0].upper() in ['LT', 'RT', 'NONE']:
             config['thumb-space'] = args[0].upper()
 
     elif action in ['data', 'dt']:

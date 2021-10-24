@@ -34,7 +34,7 @@
         {
             "name": "thumb",
             "alias": "tb",
-            "args": ["LT", "RT", "NONE", "AVG"],
+            "args": ["LT", "RT", "NONE"],
             "desc": "set which thumb presses space"
         },
         {
