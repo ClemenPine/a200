@@ -85,9 +85,17 @@ def get_table():
 
         elif (
             seq[0] == seq[2] and
-            seq[0] != seq[1]
+            seq[0] != seq[1] and
+            seq[0][0] == seq[1][0]
         ):
-            trigram_type = 'dsfb'
+            trigram_type = 'dsfb-red'
+
+        elif (
+            seq[0] == seq[2] and
+            seq[0] != seq[1] and
+            seq[0][0] != seq[1][0]
+        ):
+            trigram_type = 'dsfb-alt'
         
         elif (
             seq[0] == seq[1] and
@@ -165,7 +173,8 @@ def count_trigrams(keys: JSON, data: JSON, thumb: str):
         'oneh-in': 0,
         'oneh-out': 0,
         'sfb': 0,
-        'dsfb': 0,
+        'dsfb-alt': 0,
+        'dsfb-red': 0,
         'sfT': 0,
         'sfR': 0,
     }
@@ -196,6 +205,7 @@ def count_trigrams(keys: JSON, data: JSON, thumb: str):
 
     trigram_data['roll'] = trigram_data['roll-in'] + trigram_data['roll-out']
     trigram_data['onehand'] = trigram_data['oneh-in'] + trigram_data['oneh-out']
+    trigram_data['dsfb'] = trigram_data['dsfb-alt'] + trigram_data['dsfb-red']
 
     if trigram_data['roll-out']:
         trigram_data['roll-rt'] = trigram_data['roll-in'] / trigram_data['roll-out']
@@ -231,3 +241,9 @@ def get_results(keys: JSON, data: JSON, config: JSON):
             results['trigrams'][stat] = (left_trigrams[stat] + right_trigrams[stat]) / 2
 
     return {k: v for d in results for k, v in results[d].items()}
+
+if __name__ == '__main__':
+
+    import json
+    with open('table.json', 'w') as f:
+        f.write(json.dumps(get_table(), indent=4))

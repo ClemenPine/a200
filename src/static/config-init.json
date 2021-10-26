@@ -27,6 +27,8 @@
             "oneh-rt": false,
             "sfb": true,
             "dsfb": true,
+            "dsfb-alt": false,
+            "dsfb-red": false,
             "sfT": false,
             "sfR": false
         },
