@@ -7,7 +7,7 @@
 `Usage: ./a200 [command] [args]`
 
 #### vw | view [layout(s)]
-get a detailed view of a layout's metrics
+get a detailed view of a layout's metrics. To view a temp layout, type `parent:suffix`, where `parent` is the original layout's name, and where `suffix` is the suffix name (`temp` by default)
 
 #### s | swap [pair]
 swap two letters on a layout while in view mode
