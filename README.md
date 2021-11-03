@@ -7,7 +7,7 @@
 `Usage: ./a200 [command] [args]`
 
 #### vw | view [layout(s)]
-get a detailed view of a layout's metrics. To view a temp layout, type `parent:suffix`, where `parent` is the original layout's name, and where `suffix` is the suffix name (`temp` by default) 
+get a detailed view of a layout's metrics
 
 #### tc | toggle column [column]
 change the visibility of column(s) or set(s) of columns. Use `all` to toggle all columns
