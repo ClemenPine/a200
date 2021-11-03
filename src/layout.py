@@ -2,19 +2,18 @@ import json
 import hashlib
 import glob
 import os
-from typing import Dict
+from typing import Dict, Tuple
 
 JSON = Dict[str, any]
 
+shifted = dict(zip(
+    "abcdefghijklmnopqrstuvwxyz,./;'-=[]",
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZ<>?:\"_+{}"
+))
 
 def load_file(filename: str):
     
     fingers = ['LP', 'LR', 'LM', 'LI', 'RI', 'RM', 'RR', 'RP']
-
-    shifted = dict(zip(
-        "abcdefghijklmnopqrstuvwxyz,./;'-=[]",
-        "ABCDEFGHIJKLMNOPQRSTUVWXYZ<>?:\"_+{}"
-    ))
 
     keys = json.load(open('src/static/TEMPLATE.json', 'r'))
     keys['file'] = filename
@@ -81,12 +80,70 @@ def load_dir(dirname: str):
     return layouts
 
 
-def pretty_print(filename: str, config: JSON):
+def swap(layout_name: str, dir: str, pair: Tuple[str, str], config: JSON, suffix: str = ''):
+    filename = os.path.join(dir, layout_name)
 
-    shifted = dict(zip(
-        "abcdefghijklmnopqrstuvwxyz,./;'-=[]",
-        "ABCDEFGHIJKLMNOPQRSTUVWXYZ<>?:\"_+{}"
-    ))
+    with open(filename, 'r') as f:
+        tokens = []
+        for i, line in enumerate(f.readlines()):
+            if i == 0:
+                key_name = ' '.join(line.split())
+            else:
+                tokens.append(line.split())
+
+    chars = tokens[:len(tokens) // 2]
+    fingers = tokens[len(tokens) // 2:]
+
+    pair_keys = []
+    pair_keys.append([item for sub in chars for item in sub if pair[0] in item][0])
+    pair_keys.append([item for sub in chars for item in sub if pair[1] in item][0])
+
+    res = []
+    for row in chars:
+        new_row = []
+        for item in row:
+            if item == pair_keys[0]:
+                new_row.append(pair_keys[1])
+            elif item == pair_keys[1]:
+                new_row.append(pair_keys[0])
+            else:
+                new_row.append(item)
+        res.append(new_row)
+
+    write_dir = config['layoutdir'] + '_temp'
+    if not os.path.isdir(write_dir):
+        os.mkdir(write_dir)
+
+    write_path = os.path.join(write_dir, layout_name + suffix)
+    with open(write_path, 'w') as f:
+        f.write(key_name + suffix + '\n')
+        for row in res:
+            f.write(' '.join(row) + '\n')
+        for row in fingers:
+            f.write(' '.join(row) + '\n')
+
+
+def make_copy(filename: str, suffix: str):
+    
+    with open(filename, 'r') as f:
+        tokens = []
+        for i, line in enumerate(f.readlines()):
+            if i == 0:
+                key_name = ' '.join(line.split())
+            else:
+                tokens.append(line.split())
+
+    key_name = key_name.split(':')[0] + suffix
+    new_file = filename.split(':')[0] + suffix
+
+    with open(new_file, 'w') as f:
+        f.write(key_name + '\n')
+        for row in tokens:
+            f.write(' '.join(row) + '\n')
+
+    os.remove(filename)
+
+def pretty_print(filename: str, config: JSON):
 
     # get tokens
     keys = {}
@@ -130,4 +187,3 @@ def pretty_print(filename: str, config: JSON):
             if i == len(row) // 2 - 1:
                 print('', end=' ')
         print()
-    

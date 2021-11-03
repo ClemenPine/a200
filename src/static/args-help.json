@@ -8,6 +8,18 @@
             "desc": "get detailed data on a particular layout"
         },
         {
+            "name": "swap",
+            "alias": "s",
+            "args": ["pair"],
+            "desc": "swap two letters on a layout while in view mode"
+        },
+        {
+            "name": "name",
+            "alias": "nm",
+            "args": ["name"],
+            "desc": "set the suffix name for a temp layout"
+        },
+        {
             "name": "toggle column",
             "alias": "tc",
             "args": ["column(s)", "all"],

@@ -77,6 +77,7 @@ def get_results(config: JSON):
 
     layouts = layout.load_dir(config['layoutdir'])
     data = json.load(open(os.path.join(config['datadir'], config['datafile'] + '.json'), 'r'))
+    layouts += layout.load_dir(config['layoutdir'] + '_temp')
 
     results = {
         'file': data['file'],
@@ -84,6 +85,16 @@ def get_results(config: JSON):
     }
 
     for keys in layouts:
+        if ':' in keys['name']:
+            if config['single-mode']['active']:
+                # check if it's in single-mode
+                if not keys['name'].lower() in config['single-mode']['layouts']:
+                    continue
+            else:
+                # check if it's in layouts
+                if not keys['name'].lower() in config['layouts']:
+                    continue
+
         item = {
             'name': keys['name'],
             'file': keys['file'],
@@ -215,7 +226,11 @@ def print_layout(results: JSON, config: JSON):
         print()
 
         # header
-        print(item['name'])
+        if ':' in item['name']:
+            name = item['name'].split(':')
+            print(name[0], '-', name[1])
+        else:
+            print(item['name'])
         layout.pretty_print(item['file'], config)
         print()
 
@@ -376,7 +391,35 @@ def parse_args(name='', action=None, *args):
     except FileNotFoundError:
         config = init_config()
 
-    # parse args
+    # interactive args
+    if config['single-mode']['active']:
+
+        if action in ['swap', 's']:
+            
+            layout_name = config['single-mode']['layouts'][0]
+            dir_name = config['layoutdir']
+
+            pair = tuple(args[0])
+            if ':' in layout_name:
+                layout.swap(layout_name, dir_name + '_temp', pair, config)
+            else:
+                layout.swap(layout_name, dir_name, pair, config, ':temp')
+                config['single-mode']['layouts'] = [layout_name + ':temp']
+
+        elif action in ['colswap', 'cs', 'sc']:
+            pass
+
+        elif action in ['name', 'nm']:
+            
+            layout_name = config['single-mode']['layouts'][0]
+            dir_name = config['layoutdir']
+            filename = os.path.join(dir_name + '_temp', layout_name)
+
+            layout.make_copy(filename, ':' + args[0])
+            config['single-mode']['layouts'] = [layout_name.split(':')[0] + ':' + args[0]]
+            
+
+    # regular args
     if action in ['view', 'vw']:
         config['single-mode']['active'] = len(args) != 0
         config['single-mode']['layouts'] = [x.lower() for x in args]

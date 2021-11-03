@@ -8,3 +8,6 @@ cache/
 config.json
 init-config.json
 configs/
+
+# ignore temp layouts
+layouts_temp/
