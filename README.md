@@ -9,6 +9,12 @@
 #### vw | view [layout(s)]
 get a detailed view of a layout's metrics
 
+#### s | swap [pair]
+swap two letters on a layout while in view mode
+
+#### nm | name [name]
+set the name of a temporary layout's suffix
+
 #### tc | toggle column [column]
 change the visibility of column(s) or set(s) of columns. Use `all` to toggle all columns
 
