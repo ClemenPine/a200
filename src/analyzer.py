@@ -126,7 +126,10 @@ def count_finger_use(keys: JSON, data: JSON, thumb: str):
         if char == ' ':
             counts['TB'] = data['1-grams'][char]
         else:
-            counts[keys['keys'][char]['finger']] += data['1-grams'][char]
+            if not char in keys['keys']:
+                pass
+            else:
+                counts[keys['keys'][char]['finger']] += data['1-grams'][char]
 
     if thumb == 'NONE':
         counts['TB'] = 0
@@ -186,7 +189,10 @@ def count_trigrams(keys: JSON, data: JSON, thumb: str):
             if char == ' ':
                 fingers.append(thumb)
             else:
-                fingers.append(keys['keys'][char]['finger'])
+                if not char in keys['keys']:
+                    pass
+                else:
+                    fingers.append(keys['keys'][char]['finger'])
         
         key = '-'.join(fingers)
         if key in table:
