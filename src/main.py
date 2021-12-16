@@ -258,6 +258,13 @@ def print_layout(results: JSON, config: JSON):
         print_color(item, 'redirect', results, config)
         print()
 
+        # unknown
+        if item['metrics']['unknown'] > 0:
+            print('Unknown -'.rjust(12, ' '), end=' ')
+            print('Total:', end=' ')
+            print_color(item, 'unknown', results, config)
+            print()
+
         print()
 
         # sfb/dsfb/sfT/sfR

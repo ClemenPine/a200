@@ -180,6 +180,7 @@ def count_trigrams(keys: JSON, data: JSON, thumb: str):
         'dsfb-red': 0,
         'sfT': 0,
         'sfR': 0,
+        'unknown': 0,
     }
 
     for trigram in data['3-grams']:
@@ -204,6 +205,8 @@ def count_trigrams(keys: JSON, data: JSON, thumb: str):
                 trigram_data['sfR'] += data['3-grams'][trigram]
             else:
                 trigram_data[table[key]] += data['3-grams'][trigram]
+        else:
+            trigram_data['unknown'] += data['3-grams'][trigram]
 
     total = sum(trigram_data.values())
     for stat in trigram_data:

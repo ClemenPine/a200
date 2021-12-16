@@ -30,7 +30,8 @@
             "dsfb-alt": false,
             "dsfb-red": false,
             "sfT": false,
-            "sfR": false
+            "sfR": false,
+            "unknown": true
         },
         "finger-use": {
             "LP": false,
