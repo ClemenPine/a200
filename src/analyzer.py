@@ -115,12 +115,12 @@ def count_finger_use(keys: JSON, data: JSON, space: str):
         'LR': 0,
         'LM': 0,
         'LI': 0,
+        'LT': 0,
+        'RT': 0,
         'RI': 0,
         'RM': 0,
         'RR': 0,
-        'RP': 0,
-        'LT': 0,
-        'RT': 0
+        'RP': 0
     }
 
     for char in data['1-grams']:
