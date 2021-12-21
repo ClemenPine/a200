@@ -21,7 +21,7 @@ order the results based on sort parameters. Parameters can be specified as eithe
 #### fl | filter [metric] [cutoff]
 filter the results based on a `metric`, with a certain `cutoff`. Use `-metric` to get layouts below the cutoff, and `metric` to get layouts above the cutoff
 
-#### tb | thumb [LT, RT, NONE]
+#### sp | space [LT, RT, NONE]
 change which type of thumb to press space with. `LT` and `RT` represent the left and right thumb, respectively. `NONE` will throw away all trigram data with space.
 
 #### dt | data [data]
