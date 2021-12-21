@@ -32,8 +32,8 @@
             "desc": "filter the results based in the parameters"
         },
         {
-            "name": "thumb",
-            "alias": "tb",
+            "name": "space",
+            "alias": "sp",
             "args": ["LT", "RT", "NONE"],
             "desc": "set which thumb presses space"
         },
