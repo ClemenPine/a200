@@ -188,25 +188,28 @@ def count_trigrams(keys: JSON, data: JSON, thumb: str):
         fingers = []
         for char in trigram:
             if char == ' ':
-                fingers.append(thumb)
+                if thumb == 'NONE':
+                    break
+                else:
+                    fingers.append(thumb)
             else:
                 if not char in keys['keys']:
                     pass
                 else:
                     fingers.append(keys['keys'][char]['finger'])
-        
-        key = '-'.join(fingers)
-        if key in table:
-            if (
-                trigram[0] == trigram[1] or
-                trigram[1] == trigram[2] or
-                trigram[0] == trigram[2]
-            ):
-                trigram_data['sfR'] += data['3-grams'][trigram]
-            else:
-                trigram_data[table[key]] += data['3-grams'][trigram]
         else:
-            trigram_data['unknown'] += data['3-grams'][trigram]
+            key = '-'.join(fingers)
+            if key in table:
+                if (
+                    trigram[0] == trigram[1] or
+                    trigram[1] == trigram[2] or
+                    trigram[0] == trigram[2]
+                ):
+                    trigram_data['sfR'] += data['3-grams'][trigram]
+                else:
+                    trigram_data[table[key]] += data['3-grams'][trigram]
+            else:
+                trigram_data['unknown'] += data['3-grams'][trigram]
 
     total = sum(trigram_data.values())
     for stat in trigram_data:
