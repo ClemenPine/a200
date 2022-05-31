@@ -28,7 +28,7 @@
         {
             "name": "filter",
             "alias": "fl",
-            "args": ["metric", "cutoff"],
+            "args": ["parameters(s)"],
             "desc": "filter the results based in the parameters"
         },
         {

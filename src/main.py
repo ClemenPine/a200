@@ -142,20 +142,25 @@ def show_results(results: JSON, config: JSON):
     # print metadata
     print(results['file'].upper())
 
-    if 'metric' in config['filter']:
+    if config['filter']:
         print("filter by:", end='   ')
-        print(
-            config['filter']['metric'],
-            "{:.0%}".format(config['filter']['cutoff']),
-        )
-    print("sort by:", end='   ')
-    for sort in config['sort']:
-        print(
-            sort, 
-            "{:.0%}".format(config['sort'][sort]),
-            end='   '
-        )
-    print()
+        for filter in config['filter']:
+            print(
+                filter, 
+                "{:.2%}".format(config['filter'][filter]),
+                end='   '
+            )
+        print()
+
+    if config['sort']:
+        print("sort by:", end='   ')
+        for sort in config['sort']:
+            print(
+                sort, 
+                "{:.0%}".format(config['sort'][sort]),
+                end='   '
+            )
+        print()
 
     # print(("sort by " + config['sort'].upper() + ":").ljust(22, ' '), end=' ')
     print(("thumb: " + config['thumb-space']).ljust(22, ' '), end=' ')
@@ -167,19 +172,17 @@ def show_results(results: JSON, config: JSON):
             print(metric.rjust(8, ' '), end=' ')
     print()
 
-    # get filter
-    if 'metric' in config['filter']:
-        cutoff = config['filter']['cutoff']
-        if str(config['filter']['metric'])[0] == '-':
-            dir = -1
-            filter = config['filter']['metric'][1:]
-        else:
-            dir = 1
-            filter = config['filter']['metric']
-    else:
-        filter = 'roll'
-        cutoff = 0
-        dir = 1
+    # get filters
+    filters = []
+    for name, val in config['filter'].items():
+        
+        filter = {
+            'name': name,
+            'dir': val // abs(val),
+            'cutoff': abs(val)
+        }
+
+        filters.append(filter)
 
     # print rows
     for item in results['data']:
@@ -192,17 +195,20 @@ def show_results(results: JSON, config: JSON):
             continue
 
         # ignore filter layouts
+        for filter in filters:
+            name = filter['name']
+            dir = filter['dir']
+            cutoff = filter['cutoff']
 
-        if dir*(item['metrics'][filter] - cutoff) < 0:
-            continue
-
-
-        # print layout stats
-        print((item['name'] + '\033[38;5;250m' + ' ').ljust(36, '-') + '\033[0m', end=' ')
-        for metric, value in flatten(config['columns']).items():
-            if value:
-                print_color(item, metric, results, config, metric not in ['roll-rt', 'oneh-rt'])
-        print()
+            if dir*(item['metrics'][name] - cutoff) < 0:
+                break
+        else:
+            # print layout stats
+            print((item['name'] + '\033[38;5;250m' + ' ').ljust(36, '-') + '\033[0m', end=' ')
+            for metric, value in flatten(config['columns']).items():
+                if value:
+                    print_color(item, metric, results, config, metric not in ['roll-rt', 'oneh-rt'])
+            print()
 
 
 def print_layout(results: JSON, config: JSON):
@@ -465,13 +471,17 @@ def parse_args(name='', action=None, *args):
 
         config['single-mode']['active'] = False
 
-        if args:
-            config['filter'] = {
-                'metric': args[0],
-                'cutoff': float(args[1]),
-            }
-        else:
-            config['filter'] = {}
+        config['filter'] = {}
+
+        # parse metric string
+        for arg in args:
+            arg = arg.split('%')
+
+            config['filter'][arg[1]] = arg[0]
+        
+        # convert to float
+        for item in config['filter']:
+            config['filter'][item] = float(config['filter'][item]) / 100
 
     elif action in ['thumb', 'tb']:
         
