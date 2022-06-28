@@ -10,15 +10,24 @@ JSON = Dict[str, any]
 
 
 def init_config():
-    
-    if os.path.isfile('init-config.json'):
-        config = json.load(open('init-config.json', 'r'))
-    else:
-        config = json.load(open(os.path.join('src', 'static', 'config-init.json'), 'r'))
-    layouts = layout.load_dir(config['layoutdir'])
 
+    default_path = os.path.join('src', 'static', 'config-init.json')
+    init_path = 'init-config.json'
+
+    # use init-config if present
+    if os.path.isfile(init_path):
+        path = init_path
+    else:
+        path = default_path
+
+    with open(path, 'r') as f:
+        config = json.load(f)
+    layouts = layout.load_dir(config['layoutdir'])  
+
+    # enable layouts by default
     for keys in layouts:
-        config['layouts'][keys['name'].lower()] = True
+        name = keys['name'].lower()
+        config['layouts'][name] = True  
 
     return config
 
@@ -26,63 +35,84 @@ def init_config():
 def get_layout_percent(item: JSON, metric: str, results: JSON):
 
     wins = 0
+    item_metric = item['metrics'][metric]
+
     for result in results['data']:
-        if item['metrics'][metric] > result['metrics'][metric]:
+        result_metric = result['metrics'][metric]
+
+        if item_metric > result_metric:
             wins += 1
-    return wins / len(results['data'])
+        
+    percent = wins / len(results['data'])
+    return percent
 
 
-def print_color(item: JSON, metric: str, data: JSON, config: JSON, isPercent: bool=True):
+def color(item: JSON, metric: str, data: JSON, config: JSON, isPercent: bool=True):
 
     # get percentage of layouts worse
     percent = get_layout_percent(item, metric, data)
 
     # get string
-
+    value = item['metrics'][metric]
     if isPercent:
-        string = "{:.2%}".format(item['metrics'][metric]).rjust(6, ' ') + '  '
+        string = f'{value:>6.2%}  '
     else:
-        string = "{0:.2f}".format(item['metrics'][metric]).rjust(6, ' ') + ' '
+        string = f'{value:>6.2f}  '    
 
-    # color printing based on percentage
-    colors = json.load(open(os.path.join(config['themedir'], config['theme'] + '.json'), 'r'))['colors']
+    # get theme
+    color_path = os.path.join(config['themedir'], config['theme'] + '.json')
+    with open(color_path, 'r') as f:
+        colors = json.load(f)['colors'] 
+
+    # determine color 
     if percent > .9:
-        print('\033[38;5;' + colors['highest'] + 'm' + string + '\033[0m', end=' ')
+        color_idx = colors['highest']
     elif percent > .7:
-        print('\033[38;5;' + colors['high'] + 'm' + string + '\033[0m', end=' ')
-
+        color_idx = colors['high']
     elif percent < .1:
-        print('\033[38;5;' + colors['lowest'] + 'm' + string + '\033[0m', end=' ')
+        color_idx = colors['lowest']
     elif percent < .3:
-        print('\033[38;5;' + colors['low'] + 'm' + string + '\033[0m', end=' ')
+        color_idx = colors['low']
     else:
-        print('\033[38;5;' + colors['base'] + 'm' + string + '\033[0m', end=' ')
+        color_idx =  colors['base']
+
+    # printing
+    reg_color = '\033[0m'
+    color = f'\033[38;5;{color_idx}m'
+
+    return color + string + reg_color
 
 
 def get_results(config: JSON):
 
-    # open/create results cache
-    cachefile = os.path.join(config['cachedir'], 'cached-' + config['datafile'] + '.json')
+    cache_path = os.path.join(config['cachedir'], 'cached-' + config['datafile'] + '.json')
+    data_path = os.path.join(config['datadir'], config['datafile'] + '.json')
 
+    # create cache dir if one isn't available
     if not os.path.isdir(config['cachedir']):
         os.mkdir(config['cachedir'])
 
-    if os.path.isfile(cachefile):
-        cache = json.load(open(cachefile, 'r'))
+    # create cache or load empty one
+    if os.path.isfile(cache_path):
+
+        with open(cache_path, 'r') as f:
+            cache = json.load(f)
     else:   
         cache = {
             'file': config['datafile'],
             'data': {}
         }
 
-    layouts = layout.load_dir(config['layoutdir'])
-    data = json.load(open(os.path.join(config['datadir'], config['datafile'] + '.json'), 'r'))
+    # load data
+    with open(data_path, 'r') as f:
+        data = json.load(f)
 
     results = {
         'file': data['file'],
         'data': []
     }
 
+    layouts = layout.load_dir(config['layoutdir'])
     for keys in layouts:
         item = {
             'name': keys['name'],
@@ -111,7 +141,7 @@ def get_results(config: JSON):
     sort_results(results, config)
 
     # write cache
-    with open(cachefile, 'w') as f:
+    with open(cache_path, 'w') as f:
         f.write(json.dumps(cache, indent=4)) 
 
     return results
@@ -143,39 +173,31 @@ def show_results(results: JSON, config: JSON):
     print(results['file'].upper())
 
     if config['filter']:
-        print("filter by:", end='   ')
-        for filter in config['filter']:
-            print(
-                filter, 
-                "{:.2%}".format(config['filter'][filter]),
-                end='   '
-            )
+        print('filter by:  ', end='')
+
+        for filter, val in config['filter'].items():
+            print(f'{filter} {val:.2%}  ', end='')
         print()
 
     if config['sort']:
-        print("sort by:", end='   ')
-        for sort in config['sort']:
-            print(
-                sort, 
-                "{:.0%}".format(config['sort'][sort]),
-                end='   '
-            )
+        print('sort by:  ', end='')
+
+        for sort, val in config['sort'].items():
+            print(f'{sort} {val:.0%}  ', end='')
         print()
 
-    # print(("sort by " + config['sort'].upper() + ":").ljust(22, ' '), end=' ')
-    print(("thumb: " + config['thumb-space']).ljust(22, ' '), end=' ')
-
+    print(f'thumb: {config["thumb-space"]:<16}', end='')
 
     # print column names
     for metric, value in flatten(config['columns']).items():
         if value:
-            print(metric.rjust(8, ' '), end=' ')
+            print(f'{metric:>8} ',end='')
     print()
 
     # get filters
     filters = []
     for name, val in config['filter'].items():
-        
+
         filter = {
             'name': name,
             'dir': val // abs(val),
@@ -186,12 +208,14 @@ def show_results(results: JSON, config: JSON):
 
     # print rows
     for item in results['data']:
+        layout_name = item['name'].lower()
 
-        if item['name'].lower() not in config['layouts']:
-            config['layouts'][item['name'].lower()] = True
+        # enable new layouts by default
+        if layout_name not in config['layouts']:
+            config['layouts'][layout_name] = True
 
         # ignore hidden layouts 
-        if not config['layouts'][item['name'].lower()]:
+        if not config['layouts'][layout_name]:
             continue
 
         # ignore filter layouts
@@ -204,20 +228,26 @@ def show_results(results: JSON, config: JSON):
                 break
         else:
             # print layout stats
-            print((item['name'] + '\033[38;5;250m' + ' ').ljust(36, '-') + '\033[0m', end=' ')
+            print((layout_name + '\033[38;5;250m' + ' ').ljust(36, '-') + '\033[0m', end=' ')
             for metric, value in flatten(config['columns']).items():
                 if value:
-                    print_color(item, metric, results, config, metric not in ['roll-rt', 'oneh-rt'])
+                    print(color(item, metric, results, config, metric not in ['roll-rt', 'oneh-rt']), end=' ')
             print()
 
 
 def print_layout(results: JSON, config: JSON):
 
     print(results['file'].upper())
-    print(("thumb: " + config['thumb-space']).ljust(22, ' '))
+    print(f'thumb: {config["thumb-space"]}')
 
-    for item in [item for item in results['data'] if config['layouts'][item['name'].lower()] == True]:
-        
+    layouts = [item for item in results['data'] if config['layouts'][item['name'].lower()] == True]
+    for item in layouts:
+
+        # calculate colors
+        cl = {}
+        for metric in item['metrics']:
+            cl[metric] = color(item, metric, results, config)
+
         print()
 
         # header
@@ -227,110 +257,40 @@ def print_layout(results: JSON, config: JSON):
 
         print('Trigrams')
         print('========')
+        print(f'{"Alternates -":>12} Total: {cl["alternate"]}')
+        print(f'{"Rolls -":>12} Total: {cl["roll"]} In: {cl["roll-in"]} Out: {cl["roll-out"]} Ratio: {cl["roll-rt"]}')
+        print(f'{"Onehands -":>12} Total: {cl["onehand"]} In: {cl["oneh-in"]} Out: {cl["oneh-out"]} Ratio: {cl["oneh-rt"]}')
+        print(f'{"Redirects -":>12} Total: {cl["redirect"]}')
 
-        # alternation
-        print('Alternates -'.rjust(12, ' '), end=' ')
-        print('Total:', end=' ')
-        print_color(item, 'alternate', results, config)
-        print()
-
-        # rolls
-        print('Rolls -'.rjust(12, ' '), end=' ')
-        print('Total:', end=' ')
-        print_color(item, 'roll', results, config)
-        print('In:', end=' ')
-        print_color(item, 'roll-in', results, config),
-        print('Out:', end=' ')
-        print_color(item, 'roll-out', results, config)
-        print('Ratio:', end=' ')
-        print_color(item, 'roll-rt', results, config, False)
-        print()
-
-        # onehands
-        print('Onehands -'.rjust(12, ' '), end=' ')
-        print('Total:', end=' ')
-        print_color(item, 'onehand', results, config)
-        print('In:', end=' ')
-        print_color(item, 'oneh-in', results, config),
-        print('Out:', end=' ')
-        print_color(item, 'oneh-out', results, config)
-        print('Ratio:', end=' ')
-        print_color(item, 'oneh-rt', results, config, False)
-        print()
-
-        # redirects
-        print('Redirects -'.rjust(12, ' '), end=' ')
-        print('Total:', end=' ')
-        print_color(item, 'redirect', results, config)
-        print()
-
-        # unknown
         if item['metrics']['unknown'] > 0:
-            print('Unknown -'.rjust(12, ' '), end=' ')
-            print('Total:', end=' ')
-            print_color(item, 'unknown', results, config)
-            print()
-
+            print(f'{"Unknown -":>12} Total: {cl["unknown"]}')
         print()
 
-        # sfb/dsfb/sfT/sfR
         print('Same Finger')
         print('===========')
-
-        print('SFB -'.rjust(12, ' '), end='')
-        print_color(item, 'sfb', results, config)
-        print('DSFB -'.rjust(12, ' '), end='')
-        print_color(item, 'dsfb', results, config)
+        print(f'{"SFB -":>12}{cl["sfb"]} {"DSFB -":>12}{cl["dsfb"]}')
+        print(f'{"SFT -":>12}{cl["sfT"]} {"SFR -":>12}{cl["sfR"]}')
         print()
 
-        print('SFT -'.rjust(12, ' '), end='')
-        print_color(item, 'sfT', results, config)
-        print('SFR -'.rjust(12, ' '), end='')
-        print_color(item, 'sfR', results, config)
-        print()
-
-        print()
-
-        # finger use
         print("Finger Use")
         print("==========")
-
-        print('Left -'.rjust(12, ' '), end=' ')
-        print('Total:', end=' ')
-        print_color(item, 'LTotal', results, config)
-        for finger in ['LP','LR','LM','LI']:
-            print(finger + ':', end=' ')
-            print_color(item, finger, results, config)
+        print(f'{"Left -":>12} Total: {cl["LTotal"]} ', end='')
+        for finger in ['LP', 'LR', 'LM', 'LI']:
+            print(f'{finger}: {cl[finger]} ', end='')
         print()
 
-        print('Right -'.rjust(12, ' '), end=' ')
-        print('Total:', end=' ')
-        print_color(item, 'RTotal', results, config)
-        for finger in ['RP','RR','RM','RI']:
-            print(finger + ':', end=' ')
-            print_color(item, finger, results, config)
+        print(f'{"Right -":>12} Total: {cl["RTotal"]} ', end='')
+        for finger in ['RP', 'RR', 'RM', 'RI']:
+            print(f'{finger}: {cl[finger]} ', end='')
         print()
 
         if (config['thumb-space'] != 'NONE'):
-            print('Thumb -'.rjust(12, ' '), end=' ')
-            print('Total:', end=' ')
-            print_color(item, 'TB', results, config)
-            print()
-
+            print(f'{"Thumb -":>12} Total: {cl["TB"]}')
         print()
 
-        # row use
         print("Row Use")
         print("=======")
-
-        print('Top -'.rjust(12, ' '), end=' ')
-        print_color(item, 'top', results, config)
-        print('Home -'.rjust(12, ' '), end=' ')
-        print_color(item, 'home', results, config)
-        print('Bottom -'.rjust(12, ' '), end=' ')
-        print_color(item, 'bottom', results, config)
-        print()
-
+        print(f'{"Top -":>12} {cl["top"]}{"Home -":>12} {cl["home"]}{"Bottom -":>12} {cl["bottom"]}')
 
 
 def flatten(section: JSON):
