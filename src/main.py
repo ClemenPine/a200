@@ -1,35 +1,11 @@
 import sys
 import os
 import json
-import shutil
 import copy
-import layout, analyzer
+import layout, analyzer, config, parser
 from typing import Dict, List
 
 JSON = Dict[str, any]
-
-
-def init_config():
-
-    default_path = os.path.join('src', 'static', 'config-init.json')
-    init_path = 'init-config.json'
-
-    # use init-config if present
-    if os.path.isfile(init_path):
-        path = init_path
-    else:
-        path = default_path
-
-    with open(path, 'r') as f:
-        config = json.load(f)
-    layouts = layout.load_dir(config['layoutdir'])  
-
-    # enable layouts by default
-    for keys in layouts:
-        name = keys['name'].lower()
-        config['layouts'][name] = True  
-
-    return config
 
 
 def get_layout_percent(item: JSON, metric: str, results: JSON):
@@ -47,7 +23,7 @@ def get_layout_percent(item: JSON, metric: str, results: JSON):
     return percent
 
 
-def color(item: JSON, metric: str, data: JSON, config: JSON, isPercent: bool=True):
+def color(item: JSON, metric: str, data: JSON, conf: JSON, isPercent: bool=True):
 
     # get percentage of layouts worse
     percent = get_layout_percent(item, metric, data)
@@ -60,9 +36,7 @@ def color(item: JSON, metric: str, data: JSON, config: JSON, isPercent: bool=Tru
         string = f'{value:>6.2f}  '    
 
     # get theme
-    color_path = os.path.join(config['themedir'], config['theme'] + '.json')
-    with open(color_path, 'r') as f:
-        colors = json.load(f)['colors'] 
+    colors = config.get_colors(conf)
 
     # determine color 
     if percent > .9:
@@ -83,14 +57,14 @@ def color(item: JSON, metric: str, data: JSON, config: JSON, isPercent: bool=Tru
     return color + string + reg_color
 
 
-def get_results(config: JSON):
+def get_results(conf: JSON):
 
-    cache_path = os.path.join(config['cachedir'], 'cached-' + config['datafile'] + '.json')
-    data_path = os.path.join(config['datadir'], config['datafile'] + '.json')
+    cache_path = os.path.join(conf['cachedir'], 'cached-' + conf['datafile'] + '.json')
+    data_path = os.path.join(conf['datadir'], conf['datafile'] + '.json')
 
     # create cache dir if one isn't available
-    if not os.path.isdir(config['cachedir']):
-        os.mkdir(config['cachedir'])
+    if not os.path.isdir(conf['cachedir']):
+        os.mkdir(conf['cachedir'])
 
     # create cache or load empty one
     if os.path.isfile(cache_path):
@@ -99,7 +73,7 @@ def get_results(config: JSON):
             cache = json.load(f)
     else:   
         cache = {
-            'file': config['datafile'],
+            'file': conf['datafile'],
             'data': {}
         }
 
@@ -112,7 +86,7 @@ def get_results(config: JSON):
         'data': []
     }
 
-    layouts = layout.load_dir(config['layoutdir'])
+    layouts = layout.load_dir(conf['layoutdir'])
     for keys in layouts:
         item = {
             'name': keys['name'],
@@ -131,14 +105,14 @@ def get_results(config: JSON):
             }
 
         # get stats
-        if not config['thumb-space'] in cache['data'][item['name']]:
-            cache['data'][item['name']][config['thumb-space']] = analyzer.get_results(keys, data, config)
+        if not conf['thumb-space'] in cache['data'][item['name']]:
+            cache['data'][item['name']][conf['thumb-space']] = analyzer.get_results(keys, data, conf)
 
-        item['metrics'] = cache['data'][item['name']][config['thumb-space']]
+        item['metrics'] = cache['data'][item['name']][conf['thumb-space']]
     
         results['data'].append(item)
         
-    sort_results(results, config)
+    sort_results(results, conf)
 
     # write cache
     with open(cache_path, 'w') as f:
@@ -147,56 +121,56 @@ def get_results(config: JSON):
     return results
 
 
-def sort_results(results: JSON, config: JSON):
+def sort_results(results: JSON, conf: JSON):
 
     # calulate sort criteria
     for item in results['data']:
-        for sort in config['sort']:
+        for sort in conf['sort']:
             percent = get_layout_percent(item, sort, results)
-            if str(config['sort'][sort])[0] == '-':
+            if str(conf['sort'][sort])[0] == '-':
                 value = 1 - percent
             else:
                 value = percent
 
-            item['sort'] += value * abs(config['sort'][sort])
+            item['sort'] += value * abs(conf['sort'][sort])
 
     # sort
-    if config['sort'] == 'name':
-        results['data'] = sorted(results['data'], key=lambda x : x['name'].lower(), reverse=config['sort-high'])
+    if conf['sort'] == 'name':
+        results['data'] = sorted(results['data'], key=lambda x : x['name'].lower(), reverse=conf['sort-high'])
     else:
-        results['data'] = sorted(results['data'], key=lambda x : x['sort'], reverse=config['sort-high'])
+        results['data'] = sorted(results['data'], key=lambda x : x['sort'], reverse=conf['sort-high'])
 
 
-def show_results(results: JSON, config: JSON):
+def show_results(results: JSON, conf: JSON):
 
     # print metadata
     print(results['file'].upper())
 
-    if config['filter']:
+    if conf['filter']:
         print('filter by:  ', end='')
 
-        for filter, val in config['filter'].items():
+        for filter, val in conf['filter'].items():
             print(f'{filter} {val:.2%}  ', end='')
         print()
 
-    if config['sort']:
+    if conf['sort']:
         print('sort by:  ', end='')
 
-        for sort, val in config['sort'].items():
+        for sort, val in conf['sort'].items():
             print(f'{sort} {val:.0%}  ', end='')
         print()
 
-    print(f'thumb: {config["thumb-space"]:<16}', end='')
+    print(f'thumb: {conf["thumb-space"]:<16}', end='')
 
     # print column names
-    for metric, value in flatten(config['columns']).items():
+    for metric, value in flatten(conf['columns']).items():
         if value:
             print(f'{metric:>8} ',end='')
     print()
 
     # get filters
     filters = []
-    for name, val in config['filter'].items():
+    for name, val in conf['filter'].items():
 
         filter = {
             'name': name,
@@ -211,11 +185,11 @@ def show_results(results: JSON, config: JSON):
         layout_name = item['name'].lower()
 
         # enable new layouts by default
-        if layout_name not in config['layouts']:
-            config['layouts'][layout_name] = True
+        if layout_name not in conf['layouts']:
+            conf['layouts'][layout_name] = True
 
         # ignore hidden layouts 
-        if not config['layouts'][layout_name]:
+        if not conf['layouts'][layout_name]:
             continue
 
         # ignore filter layouts
@@ -229,30 +203,30 @@ def show_results(results: JSON, config: JSON):
         else:
             # print layout stats
             print((layout_name + '\033[38;5;250m' + ' ').ljust(36, '-') + '\033[0m', end=' ')
-            for metric, value in flatten(config['columns']).items():
+            for metric, value in flatten(conf['columns']).items():
                 if value:
-                    print(color(item, metric, results, config, metric not in ['roll-rt', 'oneh-rt']), end=' ')
+                    print(color(item, metric, results, conf, metric not in ['roll-rt', 'oneh-rt']), end=' ')
             print()
 
 
-def print_layout(results: JSON, config: JSON):
+def print_layout(results: JSON, conf: JSON):
 
     print(results['file'].upper())
-    print(f'thumb: {config["thumb-space"]}')
+    print(f'thumb: {conf["thumb-space"]}')
 
-    layouts = [item for item in results['data'] if config['layouts'][item['name'].lower()] == True]
+    layouts = [item for item in results['data'] if conf['layouts'][item['name'].lower()] == True]
     for item in layouts:
 
         # calculate colors
         cl = {}
         for metric in item['metrics']:
-            cl[metric] = color(item, metric, results, config)
+            cl[metric] = color(item, metric, results, conf)
 
         print()
 
         # header
         print(item['name'])
-        layout.pretty_print(item['file'], config)
+        layout.pretty_print(item['file'], conf)
         print()
 
         print('Trigrams')
@@ -284,7 +258,7 @@ def print_layout(results: JSON, config: JSON):
             print(f'{finger}: {cl[finger]} ', end='')
         print()
 
-        if (config['thumb-space'] != 'NONE'):
+        if (conf['thumb-space'] != 'NONE'):
             print(f'{"Thumb -":>12} Total: {cl["TB"]}')
         print()
 
@@ -303,241 +277,23 @@ def flatten(section: JSON):
             res.update(flatten(section[item]))
 
     return res
-        
-
-def get_states(section: JSON):
-
-    if type(section) == bool:
-        return [section]
-
-    states = []
-    for item in section:
-        states += get_states(section[item])
-
-    return states
-
-
-def find_section(section: JSON, target: str):
-
-    if type(section) != dict:
-        return []
-
-    matches = []
-    for item in section:
-        if item == target:
-            matches.append(section)
-        
-        matches += find_section(section[item], target)
-
-    return matches
-
-
-def set_states(section: JSON, new_state: bool):
-
-    for item in section:
-        if type(section[item]) == bool:
-            section[item] = new_state
-        else:
-            set_states(section[item], new_state)
-
-
-def parse_args(name='', action=None, *args):
-
-    # open/init config
-    try:
-        config = json.load(open('config.json', 'r'))
-    except FileNotFoundError:
-        config = init_config()
-
-    # parse args
-    if action in ['view', 'vw']:
-        config['single-mode']['active'] = len(args) != 0
-        config['single-mode']['layouts'] = [x.lower() for x in args]
-
-    elif action in ['toggle', 'tg', 'tc', 'tl']:
-
-        config['single-mode']['active'] = False
-
-        # parse target and axis
-        if action in ['toggle', 'tg']:
-            if args[0] in ['column', 'c']:
-                axis = 'columns'
-            elif args[0] in ['layout', 'l']:
-                axis = 'layouts'
-            targets = args[1:] 
-        else:
-            if action == 'tc':
-                axis = 'columns'
-            elif action == 'tl':
-                axis = 'layouts'
-            targets = args[0:]
-
-        # recursively find and set states for each target
-        for target in targets:
-            if axis == 'layouts':
-                target = target.lower()
-
-            if target in ['all', 'a']:
-                set_states(config[axis], not True in get_states(config[axis]))
-            else:
-                section = find_section(config[axis], target)[0]
-                if type(section[target]) == bool:
-                    section[target] = not section[target]
-                else:
-                    set_states(section[target], not True in get_states(section[target]))
-
-    elif action in ['sort', 'st']:
-
-        config['single-mode']['active'] = False
-
-        config['sort'] = {}
-
-        count = 0
-        total_percent = 0
-
-        for arg in args:
-            # sorting direction
-            if arg in ['high', 'h']:
-                config['sort-high'] = True
-            elif arg in ['low', 'l']:
-                config['sort-high'] = False
-            # parse metric string
-            else:
-                if not '%' in arg:
-                    if arg[0] == '-':
-                        arg = ('-', arg[1:])
-                    else:
-                        arg = ('', arg)
-                    count += 1
-                else:
-                    arg = arg.split('%')
-                    total_percent += abs(float(arg[0]))
-
-                config['sort'][arg[1]] = arg[0]
-
-        # calculate percent per unassigned metric
-        if count:
-            percent_left = (100 - total_percent) / count
-        else:
-            percent_left = 0
-        
-        # allocate percents and convert to float
-        for item in config['sort']:
-            if config['sort'][item] in ['', '-']:
-                config['sort'][item] += str(percent_left)
-            config['sort'][item] = float(config['sort'][item]) / 100
-
-    elif action in ['filter', 'fl']:
-
-        config['single-mode']['active'] = False
-
-        config['filter'] = {}
-
-        # parse metric string
-        for arg in args:
-            arg = arg.split('%')
-
-            config['filter'][arg[1]] = arg[0]
-        
-        # convert to float
-        for item in config['filter']:
-            config['filter'][item] = float(config['filter'][item]) / 100
-
-    elif action in ['thumb', 'tb']:
-        
-        if args[0].upper() in ['LT', 'RT', 'NONE', 'AVG']:
-            config['thumb-space'] = args[0].upper()
-
-    elif action in ['data', 'dt']:
-        
-        if os.path.isfile(os.path.join(config['datadir'], args[0] + '.json')):
-            config['datafile'] = args[0]
-
-    elif action in ['theme', 'tm']:
-
-        if os.path.isfile(os.path.join(config['themedir'], args[0] + '.json')):
-            config['theme'] = args[0]
-
-    elif action in ['reset']:
-    
-        config = init_config()
-
-    elif action in ['config', 'cs', 'cl']:
-
-        if action in ['config', 'cg']:
-            if args[0] in ['save', 's']:
-                command = 'save'
-                filename = args[1]
-            elif args[0] in ['load', 'l']:
-                command = 'load'
-                filename = args[1]
-
-        elif action == 'cs':
-            command = 'save'
-            filename = args[0]
-        elif action == 'cl':
-            command = 'load'
-            filename = args[0]
-
-
-        filename = os.path.join(config['configdir'], filename + '.json')
-        if command == 'save':
-
-            if not os.path.isdir(config['configdir']):
-                os.mkdir(config['configdir'])
-
-            with open(filename, 'w') as f:
-                f.write(json.dumps(config, indent=4))
-        elif command == 'load':
-            if os.path.isfile(filename):
-                config = json.load(open(filename, 'r'))
-
-    elif action in ['cache', 'cc']:
-
-        shutil.rmtree(config['cachedir'])
-
-    elif action in ['help', 'hp', 'h', '?']:
-        
-        config['single-mode']['active'] = False
-
-        args_help = json.load(open('src/static/args-help.json', 'r'))
-        print(args_help['desc'])
-        for item in args_help['actions']:
-            item_args = ' | '.join([x for x in item['args']])
-
-            print(
-                '   ',
-                (item['name'] + ' | ' + item['alias']).ljust(24, ' '),
-                item_args.ljust(24, ' '),
-                item['desc'],
-            )
-            print()
-
-        exit()
-
-    elif action == None:
-
-        config['single-mode']['active'] = False
-
-    return config
 
 
 if __name__ == "__main__":
 
-    config = parse_args(*sys.argv)
+    conf = parser.parse_args(*sys.argv)
 
-    if config['single-mode']['active']:
-        layout_config = copy.deepcopy(config)
-        layout_config['layouts'] = {item: False for item in layout_config['layouts']}
+    if conf['single-mode']['active']:
+        layout_conf = copy.deepcopy(conf)
+        layout_conf['layouts'] = {item: False for item in layout_conf['layouts']}
 
-        for layout_name in layout_config['single-mode']['layouts']:
-            layout_config['layouts'][layout_name] = True
+        for layout_name in layout_conf['single-mode']['layouts']:
+            layout_conf['layouts'][layout_name] = True
     
-        results = get_results(layout_config)
-        print_layout(results, layout_config)
+        results = get_results(layout_conf)
+        print_layout(results, layout_conf)
     else:
-        results = get_results(config)
-        show_results(results, config)
+        results = get_results(conf)
+        show_results(results, conf)
 
-    with open('config.json', 'w') as f:
-        f.write(json.dumps(config, indent=4))
+    config.write(conf)
