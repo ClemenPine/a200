@@ -296,4 +296,4 @@ if __name__ == "__main__":
         results = get_results(conf)
         show_results(results, conf)
 
-    config.write(conf)
+    config.write(conf, path='config.json')
