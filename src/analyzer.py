@@ -164,72 +164,68 @@ def count_row_use(keys: JSON, data: JSON):
     return counts
 
 
-def count_trigrams(keys: JSON, data: JSON, thumb: str):
+def get_stats(keys: JSON, data: JSON, thumb: str):
+
+    keys['keys'][' '] = {'finger': thumb}
 
     table = get_table()
-
-    trigram_data = {
-        'roll-in': 0,
-        'roll-out': 0,
-        'alternate': 0,
-        'redirect': 0,
-        'oneh-in': 0,
-        'oneh-out': 0,
-        'sfb': 0,
-        'dsfb-alt': 0,
-        'dsfb-red': 0,
-        'sfT': 0,
-        'sfR': 0,
-        'unknown': 0,
-    }
-
-    for trigram in data['3-grams']:
+    trigrams = {x: 0 for x in set(table.values()).union({'unknown', 'sfR'})}
+    
+    for gram, val in data['3-grams'].items():
         
         fingers = []
-        for char in trigram:
-            if char == ' ':
-                if thumb == 'NONE':
-                    break
-                else:
-                    fingers.append(thumb)
-            else:
-                if not char in keys['keys']:
-                    pass
-                else:
-                    fingers.append(keys['keys'][char]['finger'])
+        for char in gram:
+
+            if thumb == 'NONE' and char == ' ':
+                break
+
+            if char in keys['keys']:
+                finger = keys['keys'][char]['finger']
+                fingers.append(finger)
         else:
-            key = '-'.join(fingers)
-            if key in table:
-                if (
-                    trigram[0] == trigram[1] or
-                    trigram[1] == trigram[2] or
-                    trigram[0] == trigram[2]
-                ):
-                    trigram_data['sfR'] += data['3-grams'][trigram]
+            seq = '-'.join(fingers)
+
+            if seq in table:
+                if len(set(gram)) < len(gram):
+                    key = 'sfR'
                 else:
-                    trigram_data[table[key]] += data['3-grams'][trigram]
+                    key = table[seq]
             else:
-                trigram_data['unknown'] += data['3-grams'][trigram]
+                key = 'unknown'
+            
+            trigrams[key] += val
 
-    total = sum(trigram_data.values())
-    for stat in trigram_data:
-        trigram_data[stat] /= total
+    total = sum(trigrams.values())
+    trigrams = {k: v / total for k, v in trigrams.items()}
 
-    trigram_data['roll'] = trigram_data['roll-in'] + trigram_data['roll-out']
-    trigram_data['onehand'] = trigram_data['oneh-in'] + trigram_data['oneh-out']
-    trigram_data['dsfb'] = trigram_data['dsfb-alt'] + trigram_data['dsfb-red']
+    return trigrams
 
-    if trigram_data['roll-out']:
-        trigram_data['roll-rt'] = trigram_data['roll-in'] / trigram_data['roll-out']
+
+def get_secondary_stats(stats: JSON):
+    trigrams = {}
+
+    trigrams['roll'] = stats['roll-in'] + stats['roll-out']
+    trigrams['onehand'] = stats['oneh-in'] + stats['oneh-out']
+    trigrams['dsfb'] = stats['dsfb-alt'] + stats['dsfb-red']
+
+    if stats['roll-out']:
+        trigrams['roll-rt'] = stats['roll-in'] / stats['roll-out']
     else:
-        trigram_data['roll-rt'] = float('inf')
+        trigrams['roll-rt'] = float('inf')
 
-    if trigram_data['oneh-out']:
-        trigram_data['oneh-rt'] = trigram_data['oneh-in'] / trigram_data['oneh-out']
+    if stats['oneh-out']:
+        trigrams['oneh-rt'] = stats['oneh-in'] / stats['oneh-out']
     else:
-        trigram_data['oneh-rt'] = float('inf')
+        trigrams['oneh-rt'] = float('inf')
 
-    return trigram_data
+    return trigrams
+
+
+def count_trigrams(keys: JSON, data: JSON, thumb: str):
+    primary = get_stats(keys, data, thumb)
+    secondary = get_secondary_stats(primary)
+
+    return primary | secondary
 
 
 def get_results(keys: JSON, data: JSON, config: JSON):
@@ -240,22 +236,12 @@ def get_results(keys: JSON, data: JSON, config: JSON):
         'row-use': count_row_use(keys, data),
     }
 
-    if config['thumb-space'] == 'LT':
-        results['trigrams'] = count_trigrams(keys, data, 'LT')
-    elif config['thumb-space'] == 'RT':
-        results['trigrams'] = count_trigrams(keys, data, 'RT')
-    elif config['thumb-space'] == 'NONE':
-        results['trigrams'] = count_trigrams(keys, data, 'NONE')
-    elif config['thumb-space'] == 'AVG':
+    if config['thumb-space'] in ['LT', 'RT', 'NONE']:
+        results['trigrams'] = count_trigrams(keys, data, config['thumb-space'])
+    elif config['thumb-space'] in ['AVG']:
         left_trigrams = count_trigrams(keys, data, 'LT')
         right_trigrams = count_trigrams(keys, data, 'RT')
         for stat in left_trigrams:
             results['trigrams'][stat] = (left_trigrams[stat] + right_trigrams[stat]) / 2
 
     return {k: v for d in results for k, v in results[d].items()}
-
-if __name__ == '__main__':
-
-    import json
-    with open('table.json', 'w') as f:
-        f.write(json.dumps(get_table(), indent=4))
