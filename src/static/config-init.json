@@ -5,7 +5,7 @@
     "themedir": "themes",
     "theme": "sunset",
     "datafile": "monkeytype-quotes",
-    "thumb-space": "AVG",
+    "thumb-space": "NONE",
     "single-mode": {
         "active": false,
         "layouts": []
@@ -42,14 +42,17 @@
             "RM": false,
             "RR": false,
             "RP": false,
+            "LT": false,
+            "RT": false,
             "LTotal": false,
             "RTotal": false,
-            "TB": false
+            "TTotal": false
         },
         "row-use": {
             "top": false,
             "home": false,
-            "bottom": false
+            "bottom": false,
+            "thumb": false
         }
     },
     "layouts": {}

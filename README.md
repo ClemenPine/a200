@@ -44,8 +44,8 @@ examples:
 - `./a200 filter 50%roll`
 - `./a200 filter 50%roll -1.5%sfb`
 
-#### tb | thumb [LT, RT, NONE, AVG]
-change which type of thumb to press space with. `LT` and `RT` represent the left and right thumb, respectively. `NONE` will throw away all trigram data with space. `AVG` will take the average of the metrics from left and right. 
+#### sp | space [LT, RT, NONE]
+change which type of thumb to press space with. `LT` and `RT` represent the left and right thumb, respectively. `NONE` will throw away all trigram data with space.
 
 examples:
 - `./a200 thumb lt`

@@ -108,31 +108,30 @@ def get_table():
     return dict(sorted(table.items(), key=lambda x:x[1], reverse=True))
     
 
-def count_finger_use(keys: JSON, data: JSON, thumb: str):
+def count_finger_use(keys: JSON, data: JSON, space: str):
 
     counts = {
         'LP': 0,
         'LR': 0,
         'LM': 0,
         'LI': 0,
+        'LT': 0,
+        'RT': 0,
         'RI': 0,
         'RM': 0,
         'RR': 0,
-        'RP': 0,
-        'TB': 0,
+        'RP': 0
     }
 
     for char in data['1-grams']:
         if char == ' ':
-            counts['TB'] = data['1-grams'][char]
+            if space != 'NONE':
+                counts[space] = data['1-grams'][char]
         else:
             if not char in keys['keys']:
                 pass
             else:
                 counts[keys['keys'][char]['finger']] += data['1-grams'][char]
-
-    if thumb == 'NONE':
-        counts['TB'] = 0
 
     total = sum(counts.values())
     for finger in counts:
@@ -140,6 +139,7 @@ def count_finger_use(keys: JSON, data: JSON, thumb: str):
 
     counts['LTotal'] = sum({x: counts[x] for x in counts if x in ['LP', 'LR', 'LM', 'LI']}.values())
     counts['RTotal'] = sum({x: counts[x] for x in counts if x in ['RP', 'RR', 'RM', 'RI']}.values())
+    counts['TTotal'] = sum({x: counts[x] for x in counts if x in ['LT', 'RT']}.values())
 
     return counts  
 
@@ -150,11 +150,12 @@ def count_row_use(keys: JSON, data: JSON):
         'top': 0,
         'home': 0,
         'bottom': 0,
+        'thumb': 0
     }
 
     for char in data['1-grams']:
         if char in keys['keys'] and 'row' in keys['keys'][char]:
-            row = ['top', 'home', 'bottom'][keys['keys'][char]['row']]
+            row = ['top', 'home', 'bottom', 'thumb'][keys['keys'][char]['row']]
             counts[row] += data['1-grams'][char]
     
     total = sum(counts.values())
@@ -164,7 +165,7 @@ def count_row_use(keys: JSON, data: JSON):
     return counts
 
 
-def count_trigrams(keys: JSON, data: JSON, thumb: str):
+def count_trigrams(keys: JSON, data: JSON, space: str):
 
     table = get_table()
 
@@ -188,10 +189,7 @@ def count_trigrams(keys: JSON, data: JSON, thumb: str):
         fingers = []
         for char in trigram:
             if char == ' ':
-                if thumb == 'NONE':
-                    break
-                else:
-                    fingers.append(thumb)
+                fingers.append(space)
             else:
                 if not char in keys['keys']:
                     pass
@@ -240,17 +238,7 @@ def get_results(keys: JSON, data: JSON, config: JSON):
         'row-use': count_row_use(keys, data),
     }
 
-    if config['thumb-space'] == 'LT':
-        results['trigrams'] = count_trigrams(keys, data, 'LT')
-    elif config['thumb-space'] == 'RT':
-        results['trigrams'] = count_trigrams(keys, data, 'RT')
-    elif config['thumb-space'] == 'NONE':
-        results['trigrams'] = count_trigrams(keys, data, 'NONE')
-    elif config['thumb-space'] == 'AVG':
-        left_trigrams = count_trigrams(keys, data, 'LT')
-        right_trigrams = count_trigrams(keys, data, 'RT')
-        for stat in left_trigrams:
-            results['trigrams'][stat] = (left_trigrams[stat] + right_trigrams[stat]) / 2
+    results['trigrams'] = count_trigrams(keys, data, config['thumb-space'])
 
     return {k: v for d in results for k, v in results[d].items()}
 
